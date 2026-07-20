@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronological Bible Reading — 365 Sessions</title>
+<style>
+:root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --surface-2: #f2f1ee;
+    --surface-3: #e9e8e4;
+    --border:    #dcdad4;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #7b7a75;
+    --accent:      #2a78d6;
+    --accent-soft: #e3edf9;
+    --done:        #008300;
+    --done-soft:   #e4f1e4;
+    --track:       #e5e4df;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --surface-3: #2c2c2a;
+    --border:    #3a3a37;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #8f8e86;
+    --accent:      #3987e5;
+    --accent-soft: #1f3550;
+    --done:        #4caf50;
+    --done-soft:   #223a22;
+    --track:       #33332f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--surface-1);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* header */
+  header { margin-bottom: 28px; }
+  .kicker {
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 600; margin-bottom: 6px;
+  }
+  h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .subtitle { color: var(--text-secondary); margin-top: 8px; max-width: 60ch; font-size: 15px; }
+  .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .theme-toggle {
+    flex: none; border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--text-secondary); border-radius: 8px; padding: 6px 12px;
+    font-size: 13px; cursor: pointer;
+  }
+  .theme-toggle:hover { background: var(--surface-3); }
+
+  /* hero stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0 12px; }
+  .stat {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .stat .label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+  .stat .value { font-size: 26px; font-weight: 700; margin-top: 4px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+  /* overall bar */
+  .overall { margin: 8px 0 32px; }
+  .bar {
+    display: block; height: 10px; background: var(--track); border-radius: 5px; overflow: hidden;
+    position: relative;
+  }
+  .bar .fill {
+    display: block; height: 100%; background: var(--accent); border-radius: 5px;
+    min-width: 0; transition: width .3s ease;
+  }
+  .bar-caption { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+  /* era cards */
+  h2.section-title { font-size: 15px; font-weight: 700; letter-spacing: .01em; margin: 28px 0 12px; }
+  .era-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .era-card {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px; cursor: pointer; text-align: left; font: inherit; color: inherit;
+    transition: border-color .15s ease;
+  }
+  .era-card:hover { border-color: var(--accent); }
+  .era-card .era-num { font-size: 11px; color: var(--text-muted); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  .era-card .era-name { font-weight: 650; margin: 2px 0 10px; font-size: 14.5px; }
+  .era-card .bar { height: 6px; border-radius: 3px; }
+  .era-card .era-count { font-size: 12px; color: var(--text-secondary); margin-top: 7px; font-variant-numeric: tabular-nums; }
+  .era-card.era-done .fill { background: var(--done); }
+
+  /* era detail — accordion */
+  .era-block {
+    margin-top: 14px; scroll-margin-top: 16px;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--surface-1); overflow: hidden;
+  }
+  .era-block summary {
+    list-style: none; cursor: pointer; padding: 14px 18px;
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface-2);
+  }
+  .era-block summary::-webkit-details-marker { display: none; }
+  .era-block summary:hover { background: var(--surface-3); }
+  .era-block .chev {
+    flex: none; width: 18px; height: 18px; color: var(--text-muted);
+    transition: transform .2s ease;
+  }
+  .era-block[open] .chev { transform: rotate(90deg); }
+  .era-head-main { flex: 1; min-width: 0; }
+  .era-head-main h3 { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .era-head-main .range { font-size: 12.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .era-head-bar { flex: none; width: 120px; }
+  .era-head-bar .bar { height: 6px; border-radius: 3px; }
+  .era-head-count { flex: none; font-size: 12.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; min-width: 74px; text-align: right; }
+  .era-body { padding: 4px 18px 18px; }
+  .era-blurb { color: var(--text-secondary); font-size: 14px; margin: 10px 0 4px; max-width: 70ch; }
+  @media (max-width: 560px) { .era-head-bar { display: none; } }
+  .subgroup { margin-top: 18px; }
+  .subgroup h4 {
+    font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text-muted); font-weight: 700; margin-bottom: 6px;
+  }
+  .subnote { font-size: 12.5px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; max-width: 70ch; }
+
+  .session {
+    display: grid; grid-template-columns: 26px 40px 1fr; gap: 10px; align-items: start;
+    padding: 7px 10px; border-radius: 8px;
+  }
+  .session:hover { background: var(--surface-2); }
+  .session input[type="checkbox"] {
+    width: 16px; height: 16px; margin-top: 3px; accent-color: var(--done); cursor: pointer;
+  }
+  .session .num { font-size: 13px; color: var(--text-muted); font-weight: 600; font-variant-numeric: tabular-nums; padding-top: 1px; }
+  .session .body { font-size: 14px; }
+  .session .refs a {
+    color: var(--accent); text-decoration: none; font-weight: 600;
+  }
+  .session .refs a:hover { text-decoration: underline; }
+  .session .refs .plain { font-weight: 600; }
+  .session .note { color: var(--text-secondary); }
+  .session.done .body, .session.done .num { color: var(--text-muted); }
+  .session.done .refs a { color: var(--text-muted); }
+  .session.done .body { text-decoration: line-through; text-decoration-color: var(--border); text-decoration-thickness: 1px; }
+
+  /* footer note */
+  .note-card {
+    margin-top: 44px; background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px; font-size: 13.5px; color: var(--text-secondary);
+  }
+  .note-card strong { color: var(--text-primary); }
+  .synced { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+  .sync-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .sync-btn {
+    flex: none; border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--accent); font-weight: 600; border-radius: 8px; padding: 7px 14px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .sync-btn:hover { border-color: var(--accent); }
+  .sync-code {
+    flex: 1; min-width: 200px; border: 1px solid var(--border); background: var(--surface-1);
+    color: var(--text-secondary); border-radius: 8px; padding: 7px 10px; font-size: 12.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .top-link { display: inline-block; margin-top: 24px; font-size: 13px; color: var(--accent); text-decoration: none; }
+  .top-link:hover { text-decoration: underline; }
+
+  /* era-card as anchor */
+  a.era-card { display: block; text-decoration: none; }
+  .era-card .era-num, .era-card .era-name, .era-card .era-count { display: block; }
+
+</style>
+</head>
+<body>
+<div class="wrap" id="top">
+  <header>
+    <div class="header-row">
+      <div>
+        <div class="kicker">Reading Project</div>
+        <h1>Chronological Bible Reading</h1>
+        <p class="subtitle">The whole Bible in 365 sessions, ordered by when events happened — Job beside the patriarchs, psalms inside David's story, the prophets in the reigns they served, the Gospels as one harmony, the letters inside Acts. Sessions are numbered, not dated: a missed day never puts you behind.</p>
+      </div>
+      <button class="theme-toggle" id="themeToggle" type="button" hidden>Dark</button>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="label">Completed</div><div class="value" id="statDone">0</div><div class="sub">of 365 sessions</div></div>
+    <div class="stat"><div class="label">Progress</div><div class="value" id="statPct">0%</div><div class="sub" id="statPctSub">just getting started</div></div>
+    <div class="stat"><div class="label">Next session</div><div class="value" id="statNext">1</div><div class="sub" id="statNextSub">Ge 1–2</div></div>
+    <div class="stat"><div class="label">Current era</div><div class="value" id="statEra">1 / 7</div><div class="sub" id="statEraSub">Beginnings &amp; Patriarchs</div></div>
+  </div>
+
+  <div class="overall">
+    <div class="bar"><div class="fill" id="overallFill" style="width:0%"></div></div>
+    <div class="bar-caption"><span id="overallCaption">0 of 365</span><span id="overallRemaining">365 remaining</span></div>
+  </div>
+
+  <h2 class="section-title">The seven eras</h2>
+  <div id="eraDetail">
+<details class="era-block" id="era-0" data-era="0" data-name="Beginnings &amp; Patriarchs" data-count="31" open>
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="era-head-main">
+          <h3>Era 1 — Beginnings &amp; Patriarchs</h3>
+          <span class="range">Sessions 1–31</span>
+        </span>
+        <span class="era-head-bar"><span class="bar"><span class="fill" id="eraHeadFill-0" style="width:0%"></span></span></span>
+        <span class="era-head-count" id="eraHeadCount-0">0 / 31</span>
+      </summary>
+      <div class="era-body">
+      <p class="era-blurb">Creation to the death of Joseph, with Job read in his own era — a man of the patriarchal age, likely living while Israel was in Egypt. Genesis carries the storyline; Job shows what faith under trial looked like in that same world, before the Law.</p>
+      <div class="subgroup"><h4>Genesis</h4><div class="session" id="session-1">
+              <input type="checkbox" data-n="1" data-era="0" aria-label="Session 1 complete">
+              <span class="num">1</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/1" target="_blank" rel="noopener">Ge 1–2</a></span> <span class="note">— creation; Eden</span></span>
+            </div><div class="session" id="session-2">
+              <input type="checkbox" data-n="2" data-era="0" aria-label="Session 2 complete">
+              <span class="num">2</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/3" target="_blank" rel="noopener">Ge 3–5</a></span> <span class="note">— the rebellion; Cain and Abel; to Noah</span></span>
+            </div><div class="session" id="session-3">
+              <input type="checkbox" data-n="3" data-era="0" aria-label="Session 3 complete">
+              <span class="num">3</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/6" target="_blank" rel="noopener">Ge 6–8</a></span> <span class="note">— the Flood</span></span>
+            </div><div class="session" id="session-4">
+              <input type="checkbox" data-n="4" data-era="0" aria-label="Session 4 complete">
+              <span class="num">4</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/9" target="_blank" rel="noopener">Ge 9–11</a></span> <span class="note">— rainbow covenant; Babel; the nations</span></span>
+            </div><div class="session" id="session-5">
+              <input type="checkbox" data-n="5" data-era="0" aria-label="Session 5 complete">
+              <span class="num">5</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/12" target="_blank" rel="noopener">Ge 12–14</a></span> <span class="note">— Abram called into Canaan</span></span>
+            </div><div class="session" id="session-6">
+              <input type="checkbox" data-n="6" data-era="0" aria-label="Session 6 complete">
+              <span class="num">6</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/15" target="_blank" rel="noopener">Ge 15–17</a></span> <span class="note">— the covenant; Hagar; circumcision</span></span>
+            </div><div class="session" id="session-7">
+              <input type="checkbox" data-n="7" data-era="0" aria-label="Session 7 complete">
+              <span class="num">7</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/18" target="_blank" rel="noopener">Ge 18–19</a></span> <span class="note">— three visitors; Sodom destroyed</span></span>
+            </div><div class="session" id="session-8">
+              <input type="checkbox" data-n="8" data-era="0" aria-label="Session 8 complete">
+              <span class="num">8</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/20" target="_blank" rel="noopener">Ge 20–22</a></span> <span class="note">— Isaac born; the test on Moriah</span></span>
+            </div><div class="session" id="session-9">
+              <input type="checkbox" data-n="9" data-era="0" aria-label="Session 9 complete">
+              <span class="num">9</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/23" target="_blank" rel="noopener">Ge 23–24</a></span> <span class="note">— Sarah&#x27;s death; a wife for Isaac</span></span>
+            </div><div class="session" id="session-10">
+              <input type="checkbox" data-n="10" data-era="0" aria-label="Session 10 complete">
+              <span class="num">10</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/25" target="_blank" rel="noopener">Ge 25–27</a></span> <span class="note">— Esau sells the birthright; the blessing</span></span>
+            </div><div class="session" id="session-11">
+              <input type="checkbox" data-n="11" data-era="0" aria-label="Session 11 complete">
+              <span class="num">11</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/28" target="_blank" rel="noopener">Ge 28–30</a></span> <span class="note">— Jacob&#x27;s ladder; Rachel and Leah</span></span>
+            </div><div class="session" id="session-12">
+              <input type="checkbox" data-n="12" data-era="0" aria-label="Session 12 complete">
+              <span class="num">12</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/31" target="_blank" rel="noopener">Ge 31–33</a></span> <span class="note">— flight from Laban; wrestling; meeting Esau</span></span>
+            </div><div class="session" id="session-13">
+              <input type="checkbox" data-n="13" data-era="0" aria-label="Session 13 complete">
+              <span class="num">13</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/34" target="_blank" rel="noopener">Ge 34–36</a></span> <span class="note">— Dinah; back to Bethel; Esau&#x27;s line</span></span>
+            </div><div class="session" id="session-14">
+              <input type="checkbox" data-n="14" data-era="0" aria-label="Session 14 complete">
+              <span class="num">14</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/37" target="_blank" rel="noopener">Ge 37–38</a></span> <span class="note">— Joseph sold; Judah and Tamar</span></span>
+            </div><div class="session" id="session-15">
+              <input type="checkbox" data-n="15" data-era="0" aria-label="Session 15 complete">
+              <span class="num">15</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/39" target="_blank" rel="noopener">Ge 39–41</a></span> <span class="note">— Potiphar&#x27;s house; prison; Pharaoh&#x27;s dreams</span></span>
+            </div><div class="session" id="session-16">
+              <input type="checkbox" data-n="16" data-era="0" aria-label="Session 16 complete">
+              <span class="num">16</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/42" target="_blank" rel="noopener">Ge 42–44</a></span> <span class="note">— the brothers come to Egypt</span></span>
+            </div><div class="session" id="session-17">
+              <input type="checkbox" data-n="17" data-era="0" aria-label="Session 17 complete">
+              <span class="num">17</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/45" target="_blank" rel="noopener">Ge 45–47</a></span> <span class="note">— Joseph revealed; Jacob moves to Egypt</span></span>
+            </div><div class="session" id="session-18">
+              <input type="checkbox" data-n="18" data-era="0" aria-label="Session 18 complete">
+              <span class="num">18</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/1/48" target="_blank" rel="noopener">Ge 48–50</a></span> <span class="note">— Jacob&#x27;s deathbed blessings; Joseph&#x27;s death</span></span>
+            </div></div><div class="subgroup"><h4>Job</h4><div class="session" id="session-19">
+              <input type="checkbox" data-n="19" data-era="0" aria-label="Session 19 complete">
+              <span class="num">19</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/1" target="_blank" rel="noopener">Job 1–3</a></span> <span class="note">— the test begins; Job&#x27;s lament</span></span>
+            </div><div class="session" id="session-20">
+              <input type="checkbox" data-n="20" data-era="0" aria-label="Session 20 complete">
+              <span class="num">20</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/4" target="_blank" rel="noopener">Job 4–7</a></span> <span class="note">— Eliphaz speaks; Job answers</span></span>
+            </div><div class="session" id="session-21">
+              <input type="checkbox" data-n="21" data-era="0" aria-label="Session 21 complete">
+              <span class="num">21</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/8" target="_blank" rel="noopener">Job 8–11</a></span> <span class="note">— Bildad and Zophar; Job holds on</span></span>
+            </div><div class="session" id="session-22">
+              <input type="checkbox" data-n="22" data-era="0" aria-label="Session 22 complete">
+              <span class="num">22</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/12" target="_blank" rel="noopener">Job 12–14</a></span> <span class="note">— &quot;If a man dies, can he live again?&quot;</span></span>
+            </div><div class="session" id="session-23">
+              <input type="checkbox" data-n="23" data-era="0" aria-label="Session 23 complete">
+              <span class="num">23</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/15" target="_blank" rel="noopener">Job 15–17</a></span> <span class="note">— second round of speeches</span></span>
+            </div><div class="session" id="session-24">
+              <input type="checkbox" data-n="24" data-era="0" aria-label="Session 24 complete">
+              <span class="num">24</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/18" target="_blank" rel="noopener">Job 18–21</a></span> <span class="note">— &quot;I know that my repurchaser is alive&quot;</span></span>
+            </div><div class="session" id="session-25">
+              <input type="checkbox" data-n="25" data-era="0" aria-label="Session 25 complete">
+              <span class="num">25</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/22" target="_blank" rel="noopener">Job 22–24</a></span> <span class="note">— third round begins</span></span>
+            </div><div class="session" id="session-26">
+              <input type="checkbox" data-n="26" data-era="0" aria-label="Session 26 complete">
+              <span class="num">26</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/25" target="_blank" rel="noopener">Job 25–28</a></span> <span class="note">— where is wisdom found?</span></span>
+            </div><div class="session" id="session-27">
+              <input type="checkbox" data-n="27" data-era="0" aria-label="Session 27 complete">
+              <span class="num">27</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/29" target="_blank" rel="noopener">Job 29–31</a></span> <span class="note">— Job&#x27;s final defense</span></span>
+            </div><div class="session" id="session-28">
+              <input type="checkbox" data-n="28" data-era="0" aria-label="Session 28 complete">
+              <span class="num">28</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/32" target="_blank" rel="noopener">Job 32–34</a></span> <span class="note">— Elihu speaks</span></span>
+            </div><div class="session" id="session-29">
+              <input type="checkbox" data-n="29" data-era="0" aria-label="Session 29 complete">
+              <span class="num">29</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/35" target="_blank" rel="noopener">Job 35–37</a></span> <span class="note">— Elihu points to the storm</span></span>
+            </div><div class="session" id="session-30">
+              <input type="checkbox" data-n="30" data-era="0" aria-label="Session 30 complete">
+              <span class="num">30</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/38" target="_blank" rel="noopener">Job 38–39</a></span> <span class="note">— Jehovah answers from the windstorm</span></span>
+            </div><div class="session" id="session-31">
+              <input type="checkbox" data-n="31" data-era="0" aria-label="Session 31 complete">
+              <span class="num">31</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/18/40" target="_blank" rel="noopener">Job 40–42</a></span> <span class="note">— Job humbled and restored</span></span>
+            </div></div>
+      </div>
+    </details>
+<details class="era-block" id="era-1" data-era="1" data-name="Exodus to Conquest" data-count="58">
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="era-head-main">
+          <h3>Era 2 — Exodus to Conquest</h3>
+          <span class="range">Sessions 32–89</span>
+        </span>
+        <span class="era-head-bar"><span class="bar"><span class="fill" id="eraHeadFill-1" style="width:0%"></span></span></span>
+        <span class="era-head-count" id="eraHeadCount-1">0 / 58</span>
+      </summary>
+      <div class="era-body">
+      <p class="era-blurb">From slavery in Egypt (Exodus, 1513 B.C.E.) through the wilderness years to the conquest of Canaan under Joshua. Psalm 90 and 91, the prayers of Moses, close his story alongside Deuteronomy 33–34.</p>
+      <div class="subgroup"><h4>Exodus</h4><div class="session" id="session-32">
+              <input type="checkbox" data-n="32" data-era="1" aria-label="Session 32 complete">
+              <span class="num">32</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/1" target="_blank" rel="noopener">Ex 1–3</a></span> <span class="note">— slavery; Moses; the burning bush</span></span>
+            </div><div class="session" id="session-33">
+              <input type="checkbox" data-n="33" data-era="1" aria-label="Session 33 complete">
+              <span class="num">33</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/4" target="_blank" rel="noopener">Ex 4–6</a></span> <span class="note">— &quot;Who is Jehovah?&quot;; the name declared</span></span>
+            </div><div class="session" id="session-34">
+              <input type="checkbox" data-n="34" data-era="1" aria-label="Session 34 complete">
+              <span class="num">34</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/7" target="_blank" rel="noopener">Ex 7–9</a></span> <span class="note">— the plagues begin</span></span>
+            </div><div class="session" id="session-35">
+              <input type="checkbox" data-n="35" data-era="1" aria-label="Session 35 complete">
+              <span class="num">35</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/10" target="_blank" rel="noopener">Ex 10–12</a></span> <span class="note">— darkness; Passover; the exodus</span></span>
+            </div><div class="session" id="session-36">
+              <input type="checkbox" data-n="36" data-era="1" aria-label="Session 36 complete">
+              <span class="num">36</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/13" target="_blank" rel="noopener">Ex 13–15</a></span> <span class="note">— the Red Sea; the song of Moses</span></span>
+            </div><div class="session" id="session-37">
+              <input type="checkbox" data-n="37" data-era="1" aria-label="Session 37 complete">
+              <span class="num">37</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/16" target="_blank" rel="noopener">Ex 16–18</a></span> <span class="note">— manna; water; Jethro&#x27;s counsel</span></span>
+            </div><div class="session" id="session-38">
+              <input type="checkbox" data-n="38" data-era="1" aria-label="Session 38 complete">
+              <span class="num">38</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/19" target="_blank" rel="noopener">Ex 19–20</a></span> <span class="note">— Sinai; the Ten Words</span></span>
+            </div><div class="session" id="session-39">
+              <input type="checkbox" data-n="39" data-era="1" aria-label="Session 39 complete">
+              <span class="num">39</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/21" target="_blank" rel="noopener">Ex 21–23</a></span> <span class="note">— the covenant laws</span></span>
+            </div><div class="session" id="session-40">
+              <input type="checkbox" data-n="40" data-era="1" aria-label="Session 40 complete">
+              <span class="num">40</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/24" target="_blank" rel="noopener">Ex 24–26</a></span> <span class="note">— covenant sealed; tabernacle pattern</span></span>
+            </div><div class="session" id="session-41">
+              <input type="checkbox" data-n="41" data-era="1" aria-label="Session 41 complete">
+              <span class="num">41</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/27" target="_blank" rel="noopener">Ex 27–29</a></span> <span class="note">— altar; priesthood</span></span>
+            </div><div class="session" id="session-42">
+              <input type="checkbox" data-n="42" data-era="1" aria-label="Session 42 complete">
+              <span class="num">42</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/30" target="_blank" rel="noopener">Ex 30–32</a></span> <span class="note">— the golden calf</span></span>
+            </div><div class="session" id="session-43">
+              <input type="checkbox" data-n="43" data-era="1" aria-label="Session 43 complete">
+              <span class="num">43</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/33" target="_blank" rel="noopener">Ex 33–34</a></span> <span class="note">— Jehovah&#x27;s glory; covenant renewed</span></span>
+            </div><div class="session" id="session-44">
+              <input type="checkbox" data-n="44" data-era="1" aria-label="Session 44 complete">
+              <span class="num">44</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/35" target="_blank" rel="noopener">Ex 35–37</a></span> <span class="note">— willing-hearted builders</span></span>
+            </div><div class="session" id="session-45">
+              <input type="checkbox" data-n="45" data-era="1" aria-label="Session 45 complete">
+              <span class="num">45</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/2/38" target="_blank" rel="noopener">Ex 38–40</a></span> <span class="note">— the tabernacle raised; the cloud fills it</span></span>
+            </div></div><div class="subgroup"><h4>Leviticus</h4><div class="session" id="session-46">
+              <input type="checkbox" data-n="46" data-era="1" aria-label="Session 46 complete">
+              <span class="num">46</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/1" target="_blank" rel="noopener">Le 1–4</a></span> <span class="note">— burnt, grain, communion, sin offerings</span></span>
+            </div><div class="session" id="session-47">
+              <input type="checkbox" data-n="47" data-era="1" aria-label="Session 47 complete">
+              <span class="num">47</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/5" target="_blank" rel="noopener">Le 5–7</a></span> <span class="note">— guilt offerings; priestly portions</span></span>
+            </div><div class="session" id="session-48">
+              <input type="checkbox" data-n="48" data-era="1" aria-label="Session 48 complete">
+              <span class="num">48</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/8" target="_blank" rel="noopener">Le 8–10</a></span> <span class="note">— priesthood installed; Nadab and Abihu</span></span>
+            </div><div class="session" id="session-49">
+              <input type="checkbox" data-n="49" data-era="1" aria-label="Session 49 complete">
+              <span class="num">49</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/11" target="_blank" rel="noopener">Le 11–13</a></span> <span class="note">— clean and unclean</span></span>
+            </div><div class="session" id="session-50">
+              <input type="checkbox" data-n="50" data-era="1" aria-label="Session 50 complete">
+              <span class="num">50</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/14" target="_blank" rel="noopener">Le 14–15</a></span> <span class="note">— cleansing procedures</span></span>
+            </div><div class="session" id="session-51">
+              <input type="checkbox" data-n="51" data-era="1" aria-label="Session 51 complete">
+              <span class="num">51</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/16" target="_blank" rel="noopener">Le 16–18</a></span> <span class="note">— Atonement Day; blood; moral boundaries</span></span>
+            </div><div class="session" id="session-52">
+              <input type="checkbox" data-n="52" data-era="1" aria-label="Session 52 complete">
+              <span class="num">52</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/19" target="_blank" rel="noopener">Le 19–21</a></span> <span class="note">— &quot;You must be holy&quot;</span></span>
+            </div><div class="session" id="session-53">
+              <input type="checkbox" data-n="53" data-era="1" aria-label="Session 53 complete">
+              <span class="num">53</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/22" target="_blank" rel="noopener">Le 22–23</a></span> <span class="note">— the sacred seasons</span></span>
+            </div><div class="session" id="session-54">
+              <input type="checkbox" data-n="54" data-era="1" aria-label="Session 54 complete">
+              <span class="num">54</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/24" target="_blank" rel="noopener">Le 24–25</a></span> <span class="note">— Sabbath and Jubilee years</span></span>
+            </div><div class="session" id="session-55">
+              <input type="checkbox" data-n="55" data-era="1" aria-label="Session 55 complete">
+              <span class="num">55</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/3/26" target="_blank" rel="noopener">Le 26–27</a></span> <span class="note">— blessings, discipline, vows</span></span>
+            </div></div><div class="subgroup"><h4>Numbers</h4><div class="session" id="session-56">
+              <input type="checkbox" data-n="56" data-era="1" aria-label="Session 56 complete">
+              <span class="num">56</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/1" target="_blank" rel="noopener">Nu 1–2</a></span> <span class="note">— the census; camp order</span></span>
+            </div><div class="session" id="session-57">
+              <input type="checkbox" data-n="57" data-era="1" aria-label="Session 57 complete">
+              <span class="num">57</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/3" target="_blank" rel="noopener">Nu 3–4</a></span> <span class="note">— the Levites organized</span></span>
+            </div><div class="session" id="session-58">
+              <input type="checkbox" data-n="58" data-era="1" aria-label="Session 58 complete">
+              <span class="num">58</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/5" target="_blank" rel="noopener">Nu 5–6</a></span> <span class="note">— Nazirites; the priestly blessing</span></span>
+            </div><div class="session" id="session-59">
+              <input type="checkbox" data-n="59" data-era="1" aria-label="Session 59 complete">
+              <span class="num">59</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/7" target="_blank" rel="noopener">Nu 7</a></span> <span class="note">— the chieftains&#x27; offerings</span></span>
+            </div><div class="session" id="session-60">
+              <input type="checkbox" data-n="60" data-era="1" aria-label="Session 60 complete">
+              <span class="num">60</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/8" target="_blank" rel="noopener">Nu 8–10</a></span> <span class="note">— silver trumpets; departure from Sinai</span></span>
+            </div><div class="session" id="session-61">
+              <input type="checkbox" data-n="61" data-era="1" aria-label="Session 61 complete">
+              <span class="num">61</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/11" target="_blank" rel="noopener">Nu 11–13</a></span> <span class="note">— complaints; the twelve spies</span></span>
+            </div><div class="session" id="session-62">
+              <input type="checkbox" data-n="62" data-era="1" aria-label="Session 62 complete">
+              <span class="num">62</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/14" target="_blank" rel="noopener">Nu 14–15</a></span> <span class="note">— the faithless generation turned back</span></span>
+            </div><div class="session" id="session-63">
+              <input type="checkbox" data-n="63" data-era="1" aria-label="Session 63 complete">
+              <span class="num">63</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/16" target="_blank" rel="noopener">Nu 16–18</a></span> <span class="note">— Korah&#x27;s rebellion; Aaron&#x27;s rod</span></span>
+            </div><div class="session" id="session-64">
+              <input type="checkbox" data-n="64" data-era="1" aria-label="Session 64 complete">
+              <span class="num">64</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/19" target="_blank" rel="noopener">Nu 19–21</a></span> <span class="note">— Meribah; the copper serpent</span></span>
+            </div><div class="session" id="session-65">
+              <input type="checkbox" data-n="65" data-era="1" aria-label="Session 65 complete">
+              <span class="num">65</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/22" target="_blank" rel="noopener">Nu 22–24</a></span> <span class="note">— Balaam</span></span>
+            </div><div class="session" id="session-66">
+              <input type="checkbox" data-n="66" data-era="1" aria-label="Session 66 complete">
+              <span class="num">66</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/25" target="_blank" rel="noopener">Nu 25–27</a></span> <span class="note">— Baal of Peor; Joshua commissioned</span></span>
+            </div><div class="session" id="session-67">
+              <input type="checkbox" data-n="67" data-era="1" aria-label="Session 67 complete">
+              <span class="num">67</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/28" target="_blank" rel="noopener">Nu 28–30</a></span> <span class="note">— offerings and vows</span></span>
+            </div><div class="session" id="session-68">
+              <input type="checkbox" data-n="68" data-era="1" aria-label="Session 68 complete">
+              <span class="num">68</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/31" target="_blank" rel="noopener">Nu 31–33</a></span> <span class="note">— Midian; the journey reviewed</span></span>
+            </div><div class="session" id="session-69">
+              <input type="checkbox" data-n="69" data-era="1" aria-label="Session 69 complete">
+              <span class="num">69</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/4/34" target="_blank" rel="noopener">Nu 34–36</a></span> <span class="note">— borders; cities of refuge</span></span>
+            </div></div><div class="subgroup"><h4>Deuteronomy</h4><div class="session" id="session-70">
+              <input type="checkbox" data-n="70" data-era="1" aria-label="Session 70 complete">
+              <span class="num">70</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/1" target="_blank" rel="noopener">De 1–2</a></span> <span class="note">— Moses reviews the forty years</span></span>
+            </div><div class="session" id="session-71">
+              <input type="checkbox" data-n="71" data-era="1" aria-label="Session 71 complete">
+              <span class="num">71</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/3" target="_blank" rel="noopener">De 3–4</a></span> <span class="note">— &quot;Jehovah is the true God; there is no other&quot;</span></span>
+            </div><div class="session" id="session-72">
+              <input type="checkbox" data-n="72" data-era="1" aria-label="Session 72 complete">
+              <span class="num">72</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/5" target="_blank" rel="noopener">De 5–7</a></span> <span class="note">— the Ten Words repeated; love Jehovah wholly</span></span>
+            </div><div class="session" id="session-73">
+              <input type="checkbox" data-n="73" data-era="1" aria-label="Session 73 complete">
+              <span class="num">73</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/8" target="_blank" rel="noopener">De 8–11</a></span> <span class="note">— &quot;Man does not live by bread alone&quot;</span></span>
+            </div><div class="session" id="session-74">
+              <input type="checkbox" data-n="74" data-era="1" aria-label="Session 74 complete">
+              <span class="num">74</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/12" target="_blank" rel="noopener">De 12–15</a></span> <span class="note">— one place of worship; the poor among you</span></span>
+            </div><div class="session" id="session-75">
+              <input type="checkbox" data-n="75" data-era="1" aria-label="Session 75 complete">
+              <span class="num">75</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/16" target="_blank" rel="noopener">De 16–19</a></span> <span class="note">— festivals; judges; the coming prophet</span></span>
+            </div><div class="session" id="session-76">
+              <input type="checkbox" data-n="76" data-era="1" aria-label="Session 76 complete">
+              <span class="num">76</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/20" target="_blank" rel="noopener">De 20–23</a></span> <span class="note">— warfare and community laws</span></span>
+            </div><div class="session" id="session-77">
+              <input type="checkbox" data-n="77" data-era="1" aria-label="Session 77 complete">
+              <span class="num">77</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/24" target="_blank" rel="noopener">De 24–27</a></span> <span class="note">— protections; firstfruits; the stones at Ebal</span></span>
+            </div><div class="session" id="session-78">
+              <input type="checkbox" data-n="78" data-era="1" aria-label="Session 78 complete">
+              <span class="num">78</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/28" target="_blank" rel="noopener">De 28–29</a></span> <span class="note">— blessings and curses</span></span>
+            </div><div class="session" id="session-79">
+              <input type="checkbox" data-n="79" data-era="1" aria-label="Session 79 complete">
+              <span class="num">79</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/30" target="_blank" rel="noopener">De 30–32</a></span> <span class="note">— &quot;Choose life&quot;; the song of Moses</span></span>
+            </div><div class="session" id="session-80">
+              <input type="checkbox" data-n="80" data-era="1" aria-label="Session 80 complete">
+              <span class="num">80</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/5/33" target="_blank" rel="noopener">De 33–34</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/90" target="_blank" rel="noopener">Ps 90–91</a></span> <span class="note">— the blessing; Moses&#x27; death; his prayers</span></span>
+            </div></div><div class="subgroup"><h4>Joshua</h4><div class="session" id="session-81">
+              <input type="checkbox" data-n="81" data-era="1" aria-label="Session 81 complete">
+              <span class="num">81</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/1" target="_blank" rel="noopener">Jos 1–3</a></span> <span class="note">— &quot;Be courageous and strong&quot;; Rahab; the Jordan</span></span>
+            </div><div class="session" id="session-82">
+              <input type="checkbox" data-n="82" data-era="1" aria-label="Session 82 complete">
+              <span class="num">82</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/4" target="_blank" rel="noopener">Jos 4–6</a></span> <span class="note">— memorial stones; Jericho falls</span></span>
+            </div><div class="session" id="session-83">
+              <input type="checkbox" data-n="83" data-era="1" aria-label="Session 83 complete">
+              <span class="num">83</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/7" target="_blank" rel="noopener">Jos 7–8</a></span> <span class="note">— Achan; Ai; the Law read at Ebal</span></span>
+            </div><div class="session" id="session-84">
+              <input type="checkbox" data-n="84" data-era="1" aria-label="Session 84 complete">
+              <span class="num">84</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/9" target="_blank" rel="noopener">Jos 9–10</a></span> <span class="note">— the Gibeonites; the long day</span></span>
+            </div><div class="session" id="session-85">
+              <input type="checkbox" data-n="85" data-era="1" aria-label="Session 85 complete">
+              <span class="num">85</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/11" target="_blank" rel="noopener">Jos 11–13</a></span> <span class="note">— the conquest completed</span></span>
+            </div><div class="session" id="session-86">
+              <input type="checkbox" data-n="86" data-era="1" aria-label="Session 86 complete">
+              <span class="num">86</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/14" target="_blank" rel="noopener">Jos 14–17</a></span> <span class="note">— Caleb&#x27;s inheritance; the allotments</span></span>
+            </div><div class="session" id="session-87">
+              <input type="checkbox" data-n="87" data-era="1" aria-label="Session 87 complete">
+              <span class="num">87</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/18" target="_blank" rel="noopener">Jos 18–19</a></span> <span class="note">— the land divided at Shiloh</span></span>
+            </div><div class="session" id="session-88">
+              <input type="checkbox" data-n="88" data-era="1" aria-label="Session 88 complete">
+              <span class="num">88</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/20" target="_blank" rel="noopener">Jos 20–22</a></span> <span class="note">— refuge cities; the altar misunderstanding</span></span>
+            </div><div class="session" id="session-89">
+              <input type="checkbox" data-n="89" data-era="1" aria-label="Session 89 complete">
+              <span class="num">89</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/6/23" target="_blank" rel="noopener">Jos 23–24</a></span> <span class="note">— &quot;As for me and my household…&quot;</span></span>
+            </div></div>
+      </div>
+    </details>
+<details class="era-block" id="era-2" data-era="2" data-name="Judges to United Kingdom" data-count="88">
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="era-head-main">
+          <h3>Era 3 — Judges to United Kingdom</h3>
+          <span class="range">Sessions 90–177</span>
+        </span>
+        <span class="era-head-bar"><span class="bar"><span class="fill" id="eraHeadFill-2" style="width:0%"></span></span></span>
+        <span class="era-head-count" id="eraHeadCount-2">0 / 88</span>
+      </summary>
+      <div class="era-body">
+      <p class="era-blurb">The judges, Ruth, Samuel, Saul, David, and Solomon. Psalms with event superscriptions are read at the moment in David&#x27;s life they describe; the remaining psalms are read in blocks after David organizes the temple music (1 Ch 25). Samuel–Kings and Chronicles are interleaved so both accounts of each event sit in the same session. Solomon&#x27;s era closes with his writings: Proverbs, Ecclesiastes, the Song of Solomon.</p>
+      <div class="subgroup"><h4>Judges &amp; Ruth</h4><div class="session" id="session-90">
+              <input type="checkbox" data-n="90" data-era="2" aria-label="Session 90 complete">
+              <span class="num">90</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/7/1" target="_blank" rel="noopener">Jg 1–3</a></span> <span class="note">— the cycle begins; Ehud</span></span>
+            </div><div class="session" id="session-91">
+              <input type="checkbox" data-n="91" data-era="2" aria-label="Session 91 complete">
+              <span class="num">91</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/7/4" target="_blank" rel="noopener">Jg 4–5</a></span> <span class="note">— Deborah and Barak</span></span>
+            </div><div class="session" id="session-92">
+              <input type="checkbox" data-n="92" data-era="2" aria-label="Session 92 complete">
+              <span class="num">92</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/7/6" target="_blank" rel="noopener">Jg 6–8</a></span> <span class="note">— Gideon</span></span>
+            </div><div class="session" id="session-93">
+              <input type="checkbox" data-n="93" data-era="2" aria-label="Session 93 complete">
+              <span class="num">93</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/7/9" target="_blank" rel="noopener">Jg 9–12</a></span> <span class="note">— Abimelech; Jephthah</span></span>
+            </div><div class="session" id="session-94">
+              <input type="checkbox" data-n="94" data-era="2" aria-label="Session 94 complete">
+              <span class="num">94</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/7/13" target="_blank" rel="noopener">Jg 13–16</a></span> <span class="note">— Samson</span></span>
+            </div><div class="session" id="session-95">
+              <input type="checkbox" data-n="95" data-era="2" aria-label="Session 95 complete">
+              <span class="num">95</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/7/17" target="_blank" rel="noopener">Jg 17–19</a></span> <span class="note">— Micah&#x27;s idols; the Levite</span></span>
+            </div><div class="session" id="session-96">
+              <input type="checkbox" data-n="96" data-era="2" aria-label="Session 96 complete">
+              <span class="num">96</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/7/20" target="_blank" rel="noopener">Jg 20–21</a></span> <span class="note">— war with Benjamin</span></span>
+            </div><div class="session" id="session-97">
+              <input type="checkbox" data-n="97" data-era="2" aria-label="Session 97 complete">
+              <span class="num">97</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/8/1" target="_blank" rel="noopener">Ru 1–4</a></span> <span class="note">— Ruth and Boaz</span></span>
+            </div></div><div class="subgroup"><h4>Samuel &amp; Saul</h4><div class="session" id="session-98">
+              <input type="checkbox" data-n="98" data-era="2" aria-label="Session 98 complete">
+              <span class="num">98</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/1" target="_blank" rel="noopener">1 Sa 1–2</a></span> <span class="note">— Hannah&#x27;s vow and prayer</span></span>
+            </div><div class="session" id="session-99">
+              <input type="checkbox" data-n="99" data-era="2" aria-label="Session 99 complete">
+              <span class="num">99</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/3" target="_blank" rel="noopener">1 Sa 3–6</a></span> <span class="note">— &quot;Speak, for your servant is listening&quot;; the Ark captured</span></span>
+            </div><div class="session" id="session-100">
+              <input type="checkbox" data-n="100" data-era="2" aria-label="Session 100 complete">
+              <span class="num">100</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/7" target="_blank" rel="noopener">1 Sa 7–9</a></span> <span class="note">— Israel demands a king</span></span>
+            </div><div class="session" id="session-101">
+              <input type="checkbox" data-n="101" data-era="2" aria-label="Session 101 complete">
+              <span class="num">101</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/10" target="_blank" rel="noopener">1 Sa 10–12</a></span> <span class="note">— Saul anointed</span></span>
+            </div><div class="session" id="session-102">
+              <input type="checkbox" data-n="102" data-era="2" aria-label="Session 102 complete">
+              <span class="num">102</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/13" target="_blank" rel="noopener">1 Sa 13–14</a></span> <span class="note">— Saul&#x27;s presumptuousness; Jonathan&#x27;s daring</span></span>
+            </div><div class="session" id="session-103">
+              <input type="checkbox" data-n="103" data-era="2" aria-label="Session 103 complete">
+              <span class="num">103</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/15" target="_blank" rel="noopener">1 Sa 15–16</a></span> <span class="note">— &quot;To obey is better than a sacrifice&quot;; David anointed</span></span>
+            </div><div class="session" id="session-104">
+              <input type="checkbox" data-n="104" data-era="2" aria-label="Session 104 complete">
+              <span class="num">104</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/17" target="_blank" rel="noopener">1 Sa 17</a></span> <span class="note">— Goliath</span></span>
+            </div><div class="session" id="session-105">
+              <input type="checkbox" data-n="105" data-era="2" aria-label="Session 105 complete">
+              <span class="num">105</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/18" target="_blank" rel="noopener">1 Sa 18–19</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/59" target="_blank" rel="noopener">Ps 59</a></span> <span class="note">— Saul&#x27;s jealousy; the psalm from the watched house</span></span>
+            </div><div class="session" id="session-106">
+              <input type="checkbox" data-n="106" data-era="2" aria-label="Session 106 complete">
+              <span class="num">106</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/20" target="_blank" rel="noopener">1 Sa 20–21</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/56" target="_blank" rel="noopener">Ps 56, 34</a></span> <span class="note">— Jonathan&#x27;s loyalty; David at Gath</span></span>
+            </div><div class="session" id="session-107">
+              <input type="checkbox" data-n="107" data-era="2" aria-label="Session 107 complete">
+              <span class="num">107</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/22" target="_blank" rel="noopener">1 Sa 22–23</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/52" target="_blank" rel="noopener">Ps 52, 142</a></span> <span class="note">— the cave of Adullam; Doeg</span></span>
+            </div><div class="session" id="session-108">
+              <input type="checkbox" data-n="108" data-era="2" aria-label="Session 108 complete">
+              <span class="num">108</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/24" target="_blank" rel="noopener">1 Sa 24–25</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/57" target="_blank" rel="noopener">Ps 57</a></span> <span class="note">— Saul spared; Abigail</span></span>
+            </div><div class="session" id="session-109">
+              <input type="checkbox" data-n="109" data-era="2" aria-label="Session 109 complete">
+              <span class="num">109</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/26" target="_blank" rel="noopener">1 Sa 26–28</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/54" target="_blank" rel="noopener">Ps 54</a></span> <span class="note">— Saul spared again; the spirit medium</span></span>
+            </div><div class="session" id="session-110">
+              <input type="checkbox" data-n="110" data-era="2" aria-label="Session 110 complete">
+              <span class="num">110</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/9/29" target="_blank" rel="noopener">1 Sa 29–31</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/10" target="_blank" rel="noopener">1 Ch 10</a></span> <span class="note">— Ziklag; Saul&#x27;s death (both accounts)</span></span>
+            </div></div><div class="subgroup"><h4>David</h4><div class="session" id="session-111">
+              <input type="checkbox" data-n="111" data-era="2" aria-label="Session 111 complete">
+              <span class="num">111</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/1" target="_blank" rel="noopener">2 Sa 1–2</a></span> <span class="note">— David&#x27;s dirge; king in Hebron</span></span>
+            </div><div class="session" id="session-112">
+              <input type="checkbox" data-n="112" data-era="2" aria-label="Session 112 complete">
+              <span class="num">112</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/3" target="_blank" rel="noopener">2 Sa 3–4</a></span> <span class="note">— the house of Saul weakens</span></span>
+            </div><div class="session" id="session-113">
+              <input type="checkbox" data-n="113" data-era="2" aria-label="Session 113 complete">
+              <span class="num">113</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/5" target="_blank" rel="noopener">2 Sa 5</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/11" target="_blank" rel="noopener">1 Ch 11–12</a></span> <span class="note">— king over all Israel; Zion taken</span></span>
+            </div><div class="session" id="session-114">
+              <input type="checkbox" data-n="114" data-era="2" aria-label="Session 114 complete">
+              <span class="num">114</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/6" target="_blank" rel="noopener">2 Sa 6</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/13" target="_blank" rel="noopener">1 Ch 13–15</a></span> <span class="note">— the Ark; Uzzah; done right the second time</span></span>
+            </div><div class="session" id="session-115">
+              <input type="checkbox" data-n="115" data-era="2" aria-label="Session 115 complete">
+              <span class="num">115</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/16" target="_blank" rel="noopener">1 Ch 16</a></span> <span class="note">— the Ark installed; David&#x27;s song of thanks</span></span>
+            </div><div class="session" id="session-116">
+              <input type="checkbox" data-n="116" data-era="2" aria-label="Session 116 complete">
+              <span class="num">116</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/7" target="_blank" rel="noopener">2 Sa 7</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/17" target="_blank" rel="noopener">1 Ch 17</a></span> <span class="note">— the covenant for a kingdom</span></span>
+            </div><div class="session" id="session-117">
+              <input type="checkbox" data-n="117" data-era="2" aria-label="Session 117 complete">
+              <span class="num">117</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/8" target="_blank" rel="noopener">2 Sa 8–10</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/18" target="_blank" rel="noopener">1 Ch 18–19</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/60" target="_blank" rel="noopener">Ps 60</a></span> <span class="note">— David&#x27;s victories</span></span>
+            </div><div class="session" id="session-118">
+              <input type="checkbox" data-n="118" data-era="2" aria-label="Session 118 complete">
+              <span class="num">118</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/11" target="_blank" rel="noopener">2 Sa 11–12</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/51" target="_blank" rel="noopener">Ps 51</a></span> <span class="note">— Bath-sheba; Nathan; the psalm of repentance</span></span>
+            </div><div class="session" id="session-119">
+              <input type="checkbox" data-n="119" data-era="2" aria-label="Session 119 complete">
+              <span class="num">119</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/13" target="_blank" rel="noopener">2 Sa 13–14</a></span> <span class="note">— Amnon; Absalom&#x27;s return</span></span>
+            </div><div class="session" id="session-120">
+              <input type="checkbox" data-n="120" data-era="2" aria-label="Session 120 complete">
+              <span class="num">120</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/15" target="_blank" rel="noopener">2 Sa 15–16</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/3" target="_blank" rel="noopener">Ps 3</a></span> <span class="note">— Absalom&#x27;s revolt; David flees</span></span>
+            </div><div class="session" id="session-121">
+              <input type="checkbox" data-n="121" data-era="2" aria-label="Session 121 complete">
+              <span class="num">121</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/17" target="_blank" rel="noopener">2 Sa 17–18</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/63" target="_blank" rel="noopener">Ps 63</a></span> <span class="note">— the wilderness psalm; Absalom&#x27;s end</span></span>
+            </div><div class="session" id="session-122">
+              <input type="checkbox" data-n="122" data-era="2" aria-label="Session 122 complete">
+              <span class="num">122</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/19" target="_blank" rel="noopener">2 Sa 19–20</a></span> <span class="note">— the king returns</span></span>
+            </div><div class="session" id="session-123">
+              <input type="checkbox" data-n="123" data-era="2" aria-label="Session 123 complete">
+              <span class="num">123</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/21" target="_blank" rel="noopener">2 Sa 21–22</a></span> <span class="note">— the Gibeonites avenged; David&#x27;s song (Ps 18)</span></span>
+            </div><div class="session" id="session-124">
+              <input type="checkbox" data-n="124" data-era="2" aria-label="Session 124 complete">
+              <span class="num">124</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/10/23" target="_blank" rel="noopener">2 Sa 23–24</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/21" target="_blank" rel="noopener">1 Ch 21</a></span> <span class="note">— last words; the census and the threshing floor</span></span>
+            </div><div class="session" id="session-125">
+              <input type="checkbox" data-n="125" data-era="2" aria-label="Session 125 complete">
+              <span class="num">125</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/22" target="_blank" rel="noopener">1 Ch 22–24</a></span> <span class="note">— temple preparations; the divisions</span></span>
+            </div><div class="session" id="session-126">
+              <input type="checkbox" data-n="126" data-era="2" aria-label="Session 126 complete">
+              <span class="num">126</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/25" target="_blank" rel="noopener">1 Ch 25–27</a></span> <span class="note">— the musicians organized</span></span>
+            </div><div class="session" id="session-127">
+              <input type="checkbox" data-n="127" data-era="2" aria-label="Session 127 complete">
+              <span class="num">127</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/28" target="_blank" rel="noopener">1 Ch 28–29</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/30" target="_blank" rel="noopener">Ps 30</a></span> <span class="note">— David&#x27;s charge to Solomon</span></span>
+            </div></div><div class="subgroup"><h4>Psalms</h4><div class="session" id="session-128">
+              <input type="checkbox" data-n="128" data-era="2" aria-label="Session 128 complete">
+              <span class="num">128</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/1" target="_blank" rel="noopener">Ps 1–2, 4–8</a></span></span>
+            </div><div class="session" id="session-129">
+              <input type="checkbox" data-n="129" data-era="2" aria-label="Session 129 complete">
+              <span class="num">129</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/9" target="_blank" rel="noopener">Ps 9–14</a></span></span>
+            </div><div class="session" id="session-130">
+              <input type="checkbox" data-n="130" data-era="2" aria-label="Session 130 complete">
+              <span class="num">130</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/15" target="_blank" rel="noopener">Ps 15–17, 19–21</a></span></span>
+            </div><div class="session" id="session-131">
+              <input type="checkbox" data-n="131" data-era="2" aria-label="Session 131 complete">
+              <span class="num">131</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/22" target="_blank" rel="noopener">Ps 22–25</a></span></span>
+            </div><div class="session" id="session-132">
+              <input type="checkbox" data-n="132" data-era="2" aria-label="Session 132 complete">
+              <span class="num">132</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/26" target="_blank" rel="noopener">Ps 26–29, 31</a></span></span>
+            </div><div class="session" id="session-133">
+              <input type="checkbox" data-n="133" data-era="2" aria-label="Session 133 complete">
+              <span class="num">133</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/32" target="_blank" rel="noopener">Ps 32–33, 35–36</a></span></span>
+            </div><div class="session" id="session-134">
+              <input type="checkbox" data-n="134" data-era="2" aria-label="Session 134 complete">
+              <span class="num">134</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/37" target="_blank" rel="noopener">Ps 37–39</a></span></span>
+            </div><div class="session" id="session-135">
+              <input type="checkbox" data-n="135" data-era="2" aria-label="Session 135 complete">
+              <span class="num">135</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/40" target="_blank" rel="noopener">Ps 40–41, 53, 55</a></span></span>
+            </div><div class="session" id="session-136">
+              <input type="checkbox" data-n="136" data-era="2" aria-label="Session 136 complete">
+              <span class="num">136</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/42" target="_blank" rel="noopener">Ps 42–46</a></span></span>
+            </div><div class="session" id="session-137">
+              <input type="checkbox" data-n="137" data-era="2" aria-label="Session 137 complete">
+              <span class="num">137</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/47" target="_blank" rel="noopener">Ps 47–50, 58</a></span></span>
+            </div><div class="session" id="session-138">
+              <input type="checkbox" data-n="138" data-era="2" aria-label="Session 138 complete">
+              <span class="num">138</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/61" target="_blank" rel="noopener">Ps 61–62, 64–66</a></span></span>
+            </div><div class="session" id="session-139">
+              <input type="checkbox" data-n="139" data-era="2" aria-label="Session 139 complete">
+              <span class="num">139</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/67" target="_blank" rel="noopener">Ps 67–70</a></span></span>
+            </div><div class="session" id="session-140">
+              <input type="checkbox" data-n="140" data-era="2" aria-label="Session 140 complete">
+              <span class="num">140</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/71" target="_blank" rel="noopener">Ps 71, 73–74, 86</a></span></span>
+            </div><div class="session" id="session-141">
+              <input type="checkbox" data-n="141" data-era="2" aria-label="Session 141 complete">
+              <span class="num">141</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/75" target="_blank" rel="noopener">Ps 75–78</a></span></span>
+            </div><div class="session" id="session-142">
+              <input type="checkbox" data-n="142" data-era="2" aria-label="Session 142 complete">
+              <span class="num">142</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/79" target="_blank" rel="noopener">Ps 79–83</a></span></span>
+            </div><div class="session" id="session-143">
+              <input type="checkbox" data-n="143" data-era="2" aria-label="Session 143 complete">
+              <span class="num">143</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/84" target="_blank" rel="noopener">Ps 84–85, 87–89</a></span></span>
+            </div><div class="session" id="session-144">
+              <input type="checkbox" data-n="144" data-era="2" aria-label="Session 144 complete">
+              <span class="num">144</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/92" target="_blank" rel="noopener">Ps 92–95</a></span></span>
+            </div><div class="session" id="session-145">
+              <input type="checkbox" data-n="145" data-era="2" aria-label="Session 145 complete">
+              <span class="num">145</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/96" target="_blank" rel="noopener">Ps 96–100</a></span></span>
+            </div><div class="session" id="session-146">
+              <input type="checkbox" data-n="146" data-era="2" aria-label="Session 146 complete">
+              <span class="num">146</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/101" target="_blank" rel="noopener">Ps 101–104</a></span></span>
+            </div><div class="session" id="session-147">
+              <input type="checkbox" data-n="147" data-era="2" aria-label="Session 147 complete">
+              <span class="num">147</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/105" target="_blank" rel="noopener">Ps 105–106</a></span></span>
+            </div><div class="session" id="session-148">
+              <input type="checkbox" data-n="148" data-era="2" aria-label="Session 148 complete">
+              <span class="num">148</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/107" target="_blank" rel="noopener">Ps 107–110</a></span></span>
+            </div><div class="session" id="session-149">
+              <input type="checkbox" data-n="149" data-era="2" aria-label="Session 149 complete">
+              <span class="num">149</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/111" target="_blank" rel="noopener">Ps 111–118</a></span></span>
+            </div><div class="session" id="session-150">
+              <input type="checkbox" data-n="150" data-era="2" aria-label="Session 150 complete">
+              <span class="num">150</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/119" target="_blank" rel="noopener">Ps 119</a></span> <span class="note">— the longest chapter; allow extra time</span></span>
+            </div><div class="session" id="session-151">
+              <input type="checkbox" data-n="151" data-era="2" aria-label="Session 151 complete">
+              <span class="num">151</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/120" target="_blank" rel="noopener">Ps 120–125, 127–131</a></span> <span class="note">— songs of the ascents</span></span>
+            </div><div class="session" id="session-152">
+              <input type="checkbox" data-n="152" data-era="2" aria-label="Session 152 complete">
+              <span class="num">152</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/132" target="_blank" rel="noopener">Ps 132–136, 138</a></span></span>
+            </div><div class="session" id="session-153">
+              <input type="checkbox" data-n="153" data-era="2" aria-label="Session 153 complete">
+              <span class="num">153</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/139" target="_blank" rel="noopener">Ps 139–141, 143–145</a></span></span>
+            </div><div class="session" id="session-154">
+              <input type="checkbox" data-n="154" data-era="2" aria-label="Session 154 complete">
+              <span class="num">154</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/146" target="_blank" rel="noopener">Ps 146–150</a></span> <span class="note">— the closing hallelujahs</span></span>
+            </div></div><div class="subgroup"><h4>Solomon</h4><div class="session" id="session-155">
+              <input type="checkbox" data-n="155" data-era="2" aria-label="Session 155 complete">
+              <span class="num">155</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/1" target="_blank" rel="noopener">1 Ki 1–2</a></span> <span class="note">— Solomon secured on the throne</span></span>
+            </div><div class="session" id="session-156">
+              <input type="checkbox" data-n="156" data-era="2" aria-label="Session 156 complete">
+              <span class="num">156</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/3" target="_blank" rel="noopener">1 Ki 3–4</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/1" target="_blank" rel="noopener">2 Ch 1</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/72" target="_blank" rel="noopener">Ps 72</a></span> <span class="note">— the request for wisdom; the kingdom psalm</span></span>
+            </div><div class="session" id="session-157">
+              <input type="checkbox" data-n="157" data-era="2" aria-label="Session 157 complete">
+              <span class="num">157</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/5" target="_blank" rel="noopener">1 Ki 5–6</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/2" target="_blank" rel="noopener">2 Ch 2–3</a></span> <span class="note">— the temple begun</span></span>
+            </div><div class="session" id="session-158">
+              <input type="checkbox" data-n="158" data-era="2" aria-label="Session 158 complete">
+              <span class="num">158</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/7" target="_blank" rel="noopener">1 Ki 7</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/4" target="_blank" rel="noopener">2 Ch 4</a></span> <span class="note">— the furnishings</span></span>
+            </div><div class="session" id="session-159">
+              <input type="checkbox" data-n="159" data-era="2" aria-label="Session 159 complete">
+              <span class="num">159</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/8" target="_blank" rel="noopener">1 Ki 8</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/5" target="_blank" rel="noopener">2 Ch 5</a></span> <span class="note">— the Ark brought in; dedication prayer</span></span>
+            </div><div class="session" id="session-160">
+              <input type="checkbox" data-n="160" data-era="2" aria-label="Session 160 complete">
+              <span class="num">160</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/6" target="_blank" rel="noopener">2 Ch 6–7</a></span> <span class="note">— fire from heaven; Jehovah&#x27;s answer</span></span>
+            </div><div class="session" id="session-161">
+              <input type="checkbox" data-n="161" data-era="2" aria-label="Session 161 complete">
+              <span class="num">161</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/9" target="_blank" rel="noopener">1 Ki 9–10</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/8" target="_blank" rel="noopener">2 Ch 8–9</a></span> <span class="note">— the queen of Sheba; glory at its height</span></span>
+            </div><div class="session" id="session-162">
+              <input type="checkbox" data-n="162" data-era="2" aria-label="Session 162 complete">
+              <span class="num">162</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/11" target="_blank" rel="noopener">1 Ki 11</a></span> <span class="note">— the divided heart; the kingdom to be torn</span></span>
+            </div></div><div class="subgroup"><h4>Solomon&#x27;s Writings</h4><div class="session" id="session-163">
+              <input type="checkbox" data-n="163" data-era="2" aria-label="Session 163 complete">
+              <span class="num">163</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/1" target="_blank" rel="noopener">Pr 1–3</a></span> <span class="note">— &quot;Trust in Jehovah with all your heart&quot;</span></span>
+            </div><div class="session" id="session-164">
+              <input type="checkbox" data-n="164" data-era="2" aria-label="Session 164 complete">
+              <span class="num">164</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/4" target="_blank" rel="noopener">Pr 4–6</a></span></span>
+            </div><div class="session" id="session-165">
+              <input type="checkbox" data-n="165" data-era="2" aria-label="Session 165 complete">
+              <span class="num">165</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/7" target="_blank" rel="noopener">Pr 7–9</a></span> <span class="note">— wisdom&#x27;s banquet</span></span>
+            </div><div class="session" id="session-166">
+              <input type="checkbox" data-n="166" data-era="2" aria-label="Session 166 complete">
+              <span class="num">166</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/10" target="_blank" rel="noopener">Pr 10–12</a></span></span>
+            </div><div class="session" id="session-167">
+              <input type="checkbox" data-n="167" data-era="2" aria-label="Session 167 complete">
+              <span class="num">167</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/13" target="_blank" rel="noopener">Pr 13–15</a></span></span>
+            </div><div class="session" id="session-168">
+              <input type="checkbox" data-n="168" data-era="2" aria-label="Session 168 complete">
+              <span class="num">168</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/16" target="_blank" rel="noopener">Pr 16–18</a></span></span>
+            </div><div class="session" id="session-169">
+              <input type="checkbox" data-n="169" data-era="2" aria-label="Session 169 complete">
+              <span class="num">169</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/19" target="_blank" rel="noopener">Pr 19–21</a></span></span>
+            </div><div class="session" id="session-170">
+              <input type="checkbox" data-n="170" data-era="2" aria-label="Session 170 complete">
+              <span class="num">170</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/22" target="_blank" rel="noopener">Pr 22–24</a></span></span>
+            </div><div class="session" id="session-171">
+              <input type="checkbox" data-n="171" data-era="2" aria-label="Session 171 complete">
+              <span class="num">171</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/25" target="_blank" rel="noopener">Pr 25–28</a></span></span>
+            </div><div class="session" id="session-172">
+              <input type="checkbox" data-n="172" data-era="2" aria-label="Session 172 complete">
+              <span class="num">172</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/20/29" target="_blank" rel="noopener">Pr 29–31</a></span> <span class="note">— the words of Lemuel&#x27;s mother</span></span>
+            </div><div class="session" id="session-173">
+              <input type="checkbox" data-n="173" data-era="2" aria-label="Session 173 complete">
+              <span class="num">173</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/21/1" target="_blank" rel="noopener">Ec 1–4</a></span> <span class="note">— &quot;everything is vanity&quot; examined</span></span>
+            </div><div class="session" id="session-174">
+              <input type="checkbox" data-n="174" data-era="2" aria-label="Session 174 complete">
+              <span class="num">174</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/21/5" target="_blank" rel="noopener">Ec 5–8</a></span></span>
+            </div><div class="session" id="session-175">
+              <input type="checkbox" data-n="175" data-era="2" aria-label="Session 175 complete">
+              <span class="num">175</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/21/9" target="_blank" rel="noopener">Ec 9–12</a></span> <span class="note">— &quot;Fear the true God and keep his commandments&quot;</span></span>
+            </div><div class="session" id="session-176">
+              <input type="checkbox" data-n="176" data-era="2" aria-label="Session 176 complete">
+              <span class="num">176</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/22/1" target="_blank" rel="noopener">Ca 1–4</a></span> <span class="note">— the Shulammite</span></span>
+            </div><div class="session" id="session-177">
+              <input type="checkbox" data-n="177" data-era="2" aria-label="Session 177 complete">
+              <span class="num">177</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/22/5" target="_blank" rel="noopener">Ca 5–8</a></span> <span class="note">— love as strong as death</span></span>
+            </div></div>
+      </div>
+    </details>
+<details class="era-block" id="era-3" data-era="3" data-name="Divided Kingdom &amp; Prophets" data-count="62">
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="era-head-main">
+          <h3>Era 4 — Divided Kingdom &amp; Prophets</h3>
+          <span class="range">Sessions 178–239</span>
+        </span>
+        <span class="era-head-bar"><span class="bar"><span class="fill" id="eraHeadFill-3" style="width:0%"></span></span></span>
+        <span class="era-head-count" id="eraHeadCount-3">0 / 62</span>
+      </summary>
+      <div class="era-body">
+      <p class="era-blurb">From the split of the kingdom (997 B.C.E.) to the destruction of Jerusalem (607 B.C.E.). Kings and Chronicles run side by side, reign by reign, and each prophet enters the reading at the reign in which he served — so Isaiah is read around Hezekiah, and Jeremiah alongside Judah&#x27;s final kings.</p>
+      <div class="subgroup"><h4>Division and Early Kings</h4><div class="session" id="session-178">
+              <input type="checkbox" data-n="178" data-era="3" aria-label="Session 178 complete">
+              <span class="num">178</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/12" target="_blank" rel="noopener">1 Ki 12–13</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/10" target="_blank" rel="noopener">2 Ch 10–11</a></span> <span class="note">— the kingdom torn; calf worship begins</span></span>
+            </div><div class="session" id="session-179">
+              <input type="checkbox" data-n="179" data-era="3" aria-label="Session 179 complete">
+              <span class="num">179</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/14" target="_blank" rel="noopener">1 Ki 14</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/12" target="_blank" rel="noopener">2 Ch 12–13</a></span> <span class="note">— Jeroboam and Rehoboam judged</span></span>
+            </div><div class="session" id="session-180">
+              <input type="checkbox" data-n="180" data-era="3" aria-label="Session 180 complete">
+              <span class="num">180</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/15" target="_blank" rel="noopener">1 Ki 15–16</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/14" target="_blank" rel="noopener">2 Ch 14–16</a></span> <span class="note">— Asa&#x27;s good start; Ahab rises</span></span>
+            </div><div class="session" id="session-181">
+              <input type="checkbox" data-n="181" data-era="3" aria-label="Session 181 complete">
+              <span class="num">181</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/17" target="_blank" rel="noopener">1 Ki 17–19</a></span> <span class="note">— Elijah; Carmel; the quiet, low voice</span></span>
+            </div><div class="session" id="session-182">
+              <input type="checkbox" data-n="182" data-era="3" aria-label="Session 182 complete">
+              <span class="num">182</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/20" target="_blank" rel="noopener">1 Ki 20–21</a></span> <span class="note">— Ben-hadad; Naboth&#x27;s vineyard</span></span>
+            </div><div class="session" id="session-183">
+              <input type="checkbox" data-n="183" data-era="3" aria-label="Session 183 complete">
+              <span class="num">183</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/11/22" target="_blank" rel="noopener">1 Ki 22</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/17" target="_blank" rel="noopener">2 Ch 17–18</a></span> <span class="note">— Micaiah; Ahab&#x27;s end</span></span>
+            </div><div class="session" id="session-184">
+              <input type="checkbox" data-n="184" data-era="3" aria-label="Session 184 complete">
+              <span class="num">184</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/19" target="_blank" rel="noopener">2 Ch 19–20</a></span> <span class="note">— Jehoshaphat: &quot;The battle is not yours, but God&#x27;s&quot;</span></span>
+            </div><div class="session" id="session-185">
+              <input type="checkbox" data-n="185" data-era="3" aria-label="Session 185 complete">
+              <span class="num">185</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/1" target="_blank" rel="noopener">2 Ki 1–3</a></span> <span class="note">— Elijah taken; Elisha&#x27;s start</span></span>
+            </div><div class="session" id="session-186">
+              <input type="checkbox" data-n="186" data-era="3" aria-label="Session 186 complete">
+              <span class="num">186</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/4" target="_blank" rel="noopener">2 Ki 4–5</a></span> <span class="note">— the widow&#x27;s oil; Naaman</span></span>
+            </div><div class="session" id="session-187">
+              <input type="checkbox" data-n="187" data-era="3" aria-label="Session 187 complete">
+              <span class="num">187</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/6" target="_blank" rel="noopener">2 Ki 6–8</a></span> <span class="note">— the invisible army; the siege lifted</span></span>
+            </div><div class="session" id="session-188">
+              <input type="checkbox" data-n="188" data-era="3" aria-label="Session 188 complete">
+              <span class="num">188</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/9" target="_blank" rel="noopener">2 Ki 9–10</a></span> <span class="note">— Jehu&#x27;s ride</span></span>
+            </div><div class="session" id="session-189">
+              <input type="checkbox" data-n="189" data-era="3" aria-label="Session 189 complete">
+              <span class="num">189</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/21" target="_blank" rel="noopener">2 Ch 21–22</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/11" target="_blank" rel="noopener">2 Ki 11</a></span> <span class="note">— Athaliah; Jehoash rescued</span></span>
+            </div><div class="session" id="session-190">
+              <input type="checkbox" data-n="190" data-era="3" aria-label="Session 190 complete">
+              <span class="num">190</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/12" target="_blank" rel="noopener">2 Ki 12–13</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/23" target="_blank" rel="noopener">2 Ch 23–24</a></span> <span class="note">— the temple repaired; Elisha&#x27;s death</span></span>
+            </div><div class="session" id="session-191">
+              <input type="checkbox" data-n="191" data-era="3" aria-label="Session 191 complete">
+              <span class="num">191</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/14" target="_blank" rel="noopener">2 Ki 14</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/25" target="_blank" rel="noopener">2 Ch 25</a></span> <span class="note">— Amaziah; Jeroboam II</span></span>
+            </div></div><div class="subgroup"><h4>Prophets to the Northern Kingdom</h4><div class="session" id="session-192">
+              <input type="checkbox" data-n="192" data-era="3" aria-label="Session 192 complete">
+              <span class="num">192</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/32/1" target="_blank" rel="noopener">Jon 1–4</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/29/1" target="_blank" rel="noopener">Joe 1–3</a></span> <span class="note">— Nineveh spared; the locust plague and Jehovah&#x27;s day</span></span>
+            </div><div class="session" id="session-193">
+              <input type="checkbox" data-n="193" data-era="3" aria-label="Session 193 complete">
+              <span class="num">193</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/30/1" target="_blank" rel="noopener">Am 1–4</a></span> <span class="note">— the herdsman from Tekoa</span></span>
+            </div><div class="session" id="session-194">
+              <input type="checkbox" data-n="194" data-era="3" aria-label="Session 194 complete">
+              <span class="num">194</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/30/5" target="_blank" rel="noopener">Am 5–9</a></span> <span class="note">— &quot;Search for Jehovah, and keep living&quot;</span></span>
+            </div><div class="session" id="session-195">
+              <input type="checkbox" data-n="195" data-era="3" aria-label="Session 195 complete">
+              <span class="num">195</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/15" target="_blank" rel="noopener">2 Ki 15</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/26" target="_blank" rel="noopener">2 Ch 26–27</a></span> <span class="note">— Uzziah&#x27;s pride; Jotham</span></span>
+            </div><div class="session" id="session-196">
+              <input type="checkbox" data-n="196" data-era="3" aria-label="Session 196 complete">
+              <span class="num">196</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/28/1" target="_blank" rel="noopener">Ho 1–6</a></span> <span class="note">— Hosea&#x27;s marriage; &quot;I want loyal love, not sacrifice&quot;</span></span>
+            </div><div class="session" id="session-197">
+              <input type="checkbox" data-n="197" data-era="3" aria-label="Session 197 complete">
+              <span class="num">197</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/28/7" target="_blank" rel="noopener">Ho 7–14</a></span> <span class="note">— &quot;Come back, O Israel&quot;</span></span>
+            </div></div><div class="subgroup"><h4>Isaiah, Micah, and the Fall of Samaria</h4><div class="session" id="session-198">
+              <input type="checkbox" data-n="198" data-era="3" aria-label="Session 198 complete">
+              <span class="num">198</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/1" target="_blank" rel="noopener">Isa 1–4</a></span> <span class="note">— &quot;Though your sins are like scarlet&quot;</span></span>
+            </div><div class="session" id="session-199">
+              <input type="checkbox" data-n="199" data-era="3" aria-label="Session 199 complete">
+              <span class="num">199</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/5" target="_blank" rel="noopener">Isa 5–8</a></span> <span class="note">— the vineyard; &quot;Here I am! Send me!&quot;; Immanuel</span></span>
+            </div><div class="session" id="session-200">
+              <input type="checkbox" data-n="200" data-era="3" aria-label="Session 200 complete">
+              <span class="num">200</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/16" target="_blank" rel="noopener">2 Ki 16</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/28" target="_blank" rel="noopener">2 Ch 28</a></span> <span class="note">— Ahaz refuses the sign</span></span>
+            </div><div class="session" id="session-201">
+              <input type="checkbox" data-n="201" data-era="3" aria-label="Session 201 complete">
+              <span class="num">201</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/9" target="_blank" rel="noopener">Isa 9–12</a></span> <span class="note">— &quot;A child has been born to us&quot;</span></span>
+            </div><div class="session" id="session-202">
+              <input type="checkbox" data-n="202" data-era="3" aria-label="Session 202 complete">
+              <span class="num">202</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/13" target="_blank" rel="noopener">Isa 13–17</a></span> <span class="note">— pronouncements against the nations</span></span>
+            </div><div class="session" id="session-203">
+              <input type="checkbox" data-n="203" data-era="3" aria-label="Session 203 complete">
+              <span class="num">203</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/18" target="_blank" rel="noopener">Isa 18–22</a></span> <span class="note">— more pronouncements; Shebna</span></span>
+            </div><div class="session" id="session-204">
+              <input type="checkbox" data-n="204" data-era="3" aria-label="Session 204 complete">
+              <span class="num">204</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/23" target="_blank" rel="noopener">Isa 23–27</a></span> <span class="note">— death swallowed up forever</span></span>
+            </div><div class="session" id="session-205">
+              <input type="checkbox" data-n="205" data-era="3" aria-label="Session 205 complete">
+              <span class="num">205</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/17" target="_blank" rel="noopener">2 Ki 17</a></span> <span class="note">— Samaria falls (740 B.C.E.)</span></span>
+            </div><div class="session" id="session-206">
+              <input type="checkbox" data-n="206" data-era="3" aria-label="Session 206 complete">
+              <span class="num">206</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/33/1" target="_blank" rel="noopener">Mic 1–7</a></span> <span class="note">— &quot;What is Jehovah requiring of you?&quot;</span></span>
+            </div></div><div class="subgroup"><h4>Hezekiah</h4><div class="session" id="session-207">
+              <input type="checkbox" data-n="207" data-era="3" aria-label="Session 207 complete">
+              <span class="num">207</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/18" target="_blank" rel="noopener">2 Ki 18</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/29" target="_blank" rel="noopener">2 Ch 29–30</a></span> <span class="note">— the great cleansing and Passover</span></span>
+            </div><div class="session" id="session-208">
+              <input type="checkbox" data-n="208" data-era="3" aria-label="Session 208 complete">
+              <span class="num">208</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/31" target="_blank" rel="noopener">2 Ch 31–32</a></span> <span class="note">— Sennacherib comes</span></span>
+            </div><div class="session" id="session-209">
+              <input type="checkbox" data-n="209" data-era="3" aria-label="Session 209 complete">
+              <span class="num">209</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/28" target="_blank" rel="noopener">Isa 28–31</a></span> <span class="note">— woe to those leaning on Egypt</span></span>
+            </div><div class="session" id="session-210">
+              <input type="checkbox" data-n="210" data-era="3" aria-label="Session 210 complete">
+              <span class="num">210</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/32" target="_blank" rel="noopener">Isa 32–35</a></span> <span class="note">— a king for righteousness; the desert blossoms</span></span>
+            </div><div class="session" id="session-211">
+              <input type="checkbox" data-n="211" data-era="3" aria-label="Session 211 complete">
+              <span class="num">211</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/19" target="_blank" rel="noopener">2 Ki 19–20</a></span> <span class="note">— the angel strikes the Assyrian camp; fifteen years added</span></span>
+            </div><div class="session" id="session-212">
+              <input type="checkbox" data-n="212" data-era="3" aria-label="Session 212 complete">
+              <span class="num">212</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/36" target="_blank" rel="noopener">Isa 36–39</a></span> <span class="note">— Isaiah&#x27;s own account of the same crisis</span></span>
+            </div><div class="session" id="session-213">
+              <input type="checkbox" data-n="213" data-era="3" aria-label="Session 213 complete">
+              <span class="num">213</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/40" target="_blank" rel="noopener">Isa 40–43</a></span> <span class="note">— &quot;Comfort my people&quot;; raising up eagle wings</span></span>
+            </div><div class="session" id="session-214">
+              <input type="checkbox" data-n="214" data-era="3" aria-label="Session 214 complete">
+              <span class="num">214</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/44" target="_blank" rel="noopener">Isa 44–48</a></span> <span class="note">— Cyrus named two centuries early</span></span>
+            </div><div class="session" id="session-215">
+              <input type="checkbox" data-n="215" data-era="3" aria-label="Session 215 complete">
+              <span class="num">215</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/49" target="_blank" rel="noopener">Isa 49–53</a></span> <span class="note">— the Servant pierced for our errors</span></span>
+            </div><div class="session" id="session-216">
+              <input type="checkbox" data-n="216" data-era="3" aria-label="Session 216 complete">
+              <span class="num">216</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/54" target="_blank" rel="noopener">Isa 54–58</a></span> <span class="note">— &quot;Let the wicked man leave his way&quot;</span></span>
+            </div><div class="session" id="session-217">
+              <input type="checkbox" data-n="217" data-era="3" aria-label="Session 217 complete">
+              <span class="num">217</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/59" target="_blank" rel="noopener">Isa 59–62</a></span> <span class="note">— the repairer of broken walls</span></span>
+            </div><div class="session" id="session-218">
+              <input type="checkbox" data-n="218" data-era="3" aria-label="Session 218 complete">
+              <span class="num">218</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/23/63" target="_blank" rel="noopener">Isa 63–66</a></span> <span class="note">— new heavens and a new earth</span></span>
+            </div></div><div class="subgroup"><h4>Judah&#x27;s Last Century</h4><div class="session" id="session-219">
+              <input type="checkbox" data-n="219" data-era="3" aria-label="Session 219 complete">
+              <span class="num">219</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/21" target="_blank" rel="noopener">2 Ki 21</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/33" target="_blank" rel="noopener">2 Ch 33</a></span> <span class="note">— Manasseh&#x27;s sins and his repentance</span></span>
+            </div><div class="session" id="session-220">
+              <input type="checkbox" data-n="220" data-era="3" aria-label="Session 220 complete">
+              <span class="num">220</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/34/1" target="_blank" rel="noopener">Na 1–3</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/36/1" target="_blank" rel="noopener">Zep 1–3</a></span> <span class="note">— Nineveh&#x27;s fall foretold; &quot;Seek Jehovah, you meek ones&quot;</span></span>
+            </div><div class="session" id="session-221">
+              <input type="checkbox" data-n="221" data-era="3" aria-label="Session 221 complete">
+              <span class="num">221</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/22" target="_blank" rel="noopener">2 Ki 22</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/34" target="_blank" rel="noopener">2 Ch 34</a></span> <span class="note">— Josiah finds the book of the Law</span></span>
+            </div><div class="session" id="session-222">
+              <input type="checkbox" data-n="222" data-era="3" aria-label="Session 222 complete">
+              <span class="num">222</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/23" target="_blank" rel="noopener">2 Ki 23</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/35" target="_blank" rel="noopener">2 Ch 35</a></span> <span class="note">— the great reformation; Megiddo</span></span>
+            </div><div class="session" id="session-223">
+              <input type="checkbox" data-n="223" data-era="3" aria-label="Session 223 complete">
+              <span class="num">223</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/1" target="_blank" rel="noopener">Jer 1–3</a></span> <span class="note">— &quot;Before you were born I sanctified you&quot;</span></span>
+            </div><div class="session" id="session-224">
+              <input type="checkbox" data-n="224" data-era="3" aria-label="Session 224 complete">
+              <span class="num">224</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/4" target="_blank" rel="noopener">Jer 4–6</a></span> <span class="note">— alarm from the north</span></span>
+            </div><div class="session" id="session-225">
+              <input type="checkbox" data-n="225" data-era="3" aria-label="Session 225 complete">
+              <span class="num">225</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/7" target="_blank" rel="noopener">Jer 7–10</a></span> <span class="note">— the temple sermon; false confidence</span></span>
+            </div><div class="session" id="session-226">
+              <input type="checkbox" data-n="226" data-era="3" aria-label="Session 226 complete">
+              <span class="num">226</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/11" target="_blank" rel="noopener">Jer 11–14</a></span> <span class="note">— the broken covenant; drought</span></span>
+            </div><div class="session" id="session-227">
+              <input type="checkbox" data-n="227" data-era="3" aria-label="Session 227 complete">
+              <span class="num">227</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/15" target="_blank" rel="noopener">Jer 15–18</a></span> <span class="note">— the potter and the clay</span></span>
+            </div><div class="session" id="session-228">
+              <input type="checkbox" data-n="228" data-era="3" aria-label="Session 228 complete">
+              <span class="num">228</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/19" target="_blank" rel="noopener">Jer 19–22</a></span> <span class="note">— the smashed flask; &quot;a burning fire shut up in my bones&quot;</span></span>
+            </div><div class="session" id="session-229">
+              <input type="checkbox" data-n="229" data-era="3" aria-label="Session 229 complete">
+              <span class="num">229</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/35/1" target="_blank" rel="noopener">Hab 1–3</a></span> <span class="note">— &quot;How long, O Jehovah?&quot;; living by faith</span></span>
+            </div><div class="session" id="session-230">
+              <input type="checkbox" data-n="230" data-era="3" aria-label="Session 230 complete">
+              <span class="num">230</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/23" target="_blank" rel="noopener">Jer 23–25</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/24" target="_blank" rel="noopener">2 Ki 24</a></span> <span class="note">— seventy years foretold; first exiles taken (617)</span></span>
+            </div><div class="session" id="session-231">
+              <input type="checkbox" data-n="231" data-era="3" aria-label="Session 231 complete">
+              <span class="num">231</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/26" target="_blank" rel="noopener">Jer 26–29</a></span> <span class="note">— the yoke; the letter to the exiles</span></span>
+            </div><div class="session" id="session-232">
+              <input type="checkbox" data-n="232" data-era="3" aria-label="Session 232 complete">
+              <span class="num">232</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/30" target="_blank" rel="noopener">Jer 30–33</a></span> <span class="note">— the new covenant promised</span></span>
+            </div><div class="session" id="session-233">
+              <input type="checkbox" data-n="233" data-era="3" aria-label="Session 233 complete">
+              <span class="num">233</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/34" target="_blank" rel="noopener">Jer 34–36</a></span> <span class="note">— the burned scroll; the Rechabites</span></span>
+            </div><div class="session" id="session-234">
+              <input type="checkbox" data-n="234" data-era="3" aria-label="Session 234 complete">
+              <span class="num">234</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/37" target="_blank" rel="noopener">Jer 37–39</a></span> <span class="note">— the cistern; Jerusalem breached</span></span>
+            </div><div class="session" id="session-235">
+              <input type="checkbox" data-n="235" data-era="3" aria-label="Session 235 complete">
+              <span class="num">235</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/12/25" target="_blank" rel="noopener">2 Ki 25</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/14/36" target="_blank" rel="noopener">2 Ch 36</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/31/1" target="_blank" rel="noopener">Ob</a></span> <span class="note">— the city destroyed (607); Edom judged</span></span>
+            </div><div class="session" id="session-236">
+              <input type="checkbox" data-n="236" data-era="3" aria-label="Session 236 complete">
+              <span class="num">236</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/40" target="_blank" rel="noopener">Jer 40–44</a></span> <span class="note">— the remnant flees to Egypt</span></span>
+            </div><div class="session" id="session-237">
+              <input type="checkbox" data-n="237" data-era="3" aria-label="Session 237 complete">
+              <span class="num">237</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/45" target="_blank" rel="noopener">Jer 45–49</a></span> <span class="note">— words against the nations</span></span>
+            </div><div class="session" id="session-238">
+              <input type="checkbox" data-n="238" data-era="3" aria-label="Session 238 complete">
+              <span class="num">238</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/24/50" target="_blank" rel="noopener">Jer 50–52</a></span> <span class="note">— Babylon&#x27;s own fall decreed</span></span>
+            </div><div class="session" id="session-239">
+              <input type="checkbox" data-n="239" data-era="3" aria-label="Session 239 complete">
+              <span class="num">239</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/25/1" target="_blank" rel="noopener">La 1–5</a></span> <span class="note">— Jeremiah weeps over the city; &quot;his mercies are new each morning&quot;</span></span>
+            </div></div>
+      </div>
+    </details>
+<details class="era-block" id="era-4" data-era="4" data-name="Exile &amp; Return" data-count="36">
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="era-head-main">
+          <h3>Era 5 — Exile &amp; Return</h3>
+          <span class="range">Sessions 240–275</span>
+        </span>
+        <span class="era-head-bar"><span class="bar"><span class="fill" id="eraHeadFill-4" style="width:0%"></span></span></span>
+        <span class="era-head-count" id="eraHeadCount-4">0 / 36</span>
+      </summary>
+      <div class="era-body">
+      <p class="era-blurb">Ezekiel prophesied among the exiles from 613 B.C.E., overlapping Jerusalem&#x27;s final years; Daniel served in Babylon&#x27;s court from the first deportation to the Persian era. Then the return (537), the rebuilt temple (515), Esther in Persia, Ezra (468), Nehemiah (455), and Malachi&#x27;s closing words. The genealogies of 1 Chronicles 1–9 are read here, where Ezra compiled them for the restored nation.</p>
+      <div class="subgroup"><h4>Ezekiel — Among the Exiles</h4><div class="session" id="session-240">
+              <input type="checkbox" data-n="240" data-era="4" aria-label="Session 240 complete">
+              <span class="num">240</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/1" target="_blank" rel="noopener">Eze 1–3</a></span> <span class="note">— the vision of the celestial chariot; the watchman</span></span>
+            </div><div class="session" id="session-241">
+              <input type="checkbox" data-n="241" data-era="4" aria-label="Session 241 complete">
+              <span class="num">241</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/4" target="_blank" rel="noopener">Eze 4–7</a></span> <span class="note">— the siege dramatized</span></span>
+            </div><div class="session" id="session-242">
+              <input type="checkbox" data-n="242" data-era="4" aria-label="Session 242 complete">
+              <span class="num">242</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/8" target="_blank" rel="noopener">Eze 8–11</a></span> <span class="note">— the temple tour; the glory departs</span></span>
+            </div><div class="session" id="session-243">
+              <input type="checkbox" data-n="243" data-era="4" aria-label="Session 243 complete">
+              <span class="num">243</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/12" target="_blank" rel="noopener">Eze 12–14</a></span> <span class="note">— the exile&#x27;s baggage; false prophets</span></span>
+            </div><div class="session" id="session-244">
+              <input type="checkbox" data-n="244" data-era="4" aria-label="Session 244 complete">
+              <span class="num">244</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/15" target="_blank" rel="noopener">Eze 15–17</a></span> <span class="note">— the vine; the unfaithful wife; the eagles</span></span>
+            </div><div class="session" id="session-245">
+              <input type="checkbox" data-n="245" data-era="4" aria-label="Session 245 complete">
+              <span class="num">245</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/18" target="_blank" rel="noopener">Eze 18–20</a></span> <span class="note">— &quot;The soul who sins is the one who will die&quot;</span></span>
+            </div><div class="session" id="session-246">
+              <input type="checkbox" data-n="246" data-era="4" aria-label="Session 246 complete">
+              <span class="num">246</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/21" target="_blank" rel="noopener">Eze 21–23</a></span> <span class="note">— the sword sharpened; two sisters</span></span>
+            </div><div class="session" id="session-247">
+              <input type="checkbox" data-n="247" data-era="4" aria-label="Session 247 complete">
+              <span class="num">247</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/24" target="_blank" rel="noopener">Eze 24–26</a></span> <span class="note">— the cooking pot; Ezekiel&#x27;s wife; Tyre</span></span>
+            </div><div class="session" id="session-248">
+              <input type="checkbox" data-n="248" data-era="4" aria-label="Session 248 complete">
+              <span class="num">248</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/27" target="_blank" rel="noopener">Eze 27–30</a></span> <span class="note">— the lament for Tyre; Egypt</span></span>
+            </div><div class="session" id="session-249">
+              <input type="checkbox" data-n="249" data-era="4" aria-label="Session 249 complete">
+              <span class="num">249</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/31" target="_blank" rel="noopener">Eze 31–33</a></span> <span class="note">— the watchman again; &quot;the city has fallen!&quot;</span></span>
+            </div><div class="session" id="session-250">
+              <input type="checkbox" data-n="250" data-era="4" aria-label="Session 250 complete">
+              <span class="num">250</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/34" target="_blank" rel="noopener">Eze 34–36</a></span> <span class="note">— shepherds condemned; a new heart and spirit</span></span>
+            </div><div class="session" id="session-251">
+              <input type="checkbox" data-n="251" data-era="4" aria-label="Session 251 complete">
+              <span class="num">251</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/37" target="_blank" rel="noopener">Eze 37–39</a></span> <span class="note">— the valley of dry bones; Gog of Magog</span></span>
+            </div><div class="session" id="session-252">
+              <input type="checkbox" data-n="252" data-era="4" aria-label="Session 252 complete">
+              <span class="num">252</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/40" target="_blank" rel="noopener">Eze 40–42</a></span> <span class="note">— the visionary temple measured</span></span>
+            </div><div class="session" id="session-253">
+              <input type="checkbox" data-n="253" data-era="4" aria-label="Session 253 complete">
+              <span class="num">253</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/43" target="_blank" rel="noopener">Eze 43–45</a></span> <span class="note">— the glory returns</span></span>
+            </div><div class="session" id="session-254">
+              <input type="checkbox" data-n="254" data-era="4" aria-label="Session 254 complete">
+              <span class="num">254</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/26/46" target="_blank" rel="noopener">Eze 46–48</a></span> <span class="note">— the river from the sanctuary; &quot;Jehovah Is There&quot;</span></span>
+            </div></div><div class="subgroup"><h4>Daniel — In Babylon&#x27;s Court</h4><div class="session" id="session-255">
+              <input type="checkbox" data-n="255" data-era="4" aria-label="Session 255 complete">
+              <span class="num">255</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/27/1" target="_blank" rel="noopener">Da 1–2</a></span> <span class="note">— the training; the immense image</span></span>
+            </div><div class="session" id="session-256">
+              <input type="checkbox" data-n="256" data-era="4" aria-label="Session 256 complete">
+              <span class="num">256</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/27/3" target="_blank" rel="noopener">Da 3–4</a></span> <span class="note">— the fiery furnace; the tree dream</span></span>
+            </div><div class="session" id="session-257">
+              <input type="checkbox" data-n="257" data-era="4" aria-label="Session 257 complete">
+              <span class="num">257</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/27/5" target="_blank" rel="noopener">Da 5–6</a></span> <span class="note">— the writing on the wall; the lions&#x27; pit</span></span>
+            </div><div class="session" id="session-258">
+              <input type="checkbox" data-n="258" data-era="4" aria-label="Session 258 complete">
+              <span class="num">258</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/27/7" target="_blank" rel="noopener">Da 7–9</a></span> <span class="note">— the beasts; the seventy weeks</span></span>
+            </div><div class="session" id="session-259">
+              <input type="checkbox" data-n="259" data-era="4" aria-label="Session 259 complete">
+              <span class="num">259</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/27/10" target="_blank" rel="noopener">Da 10–12</a></span> <span class="note">— kings of the north and south; &quot;stand up for your lot&quot;</span></span>
+            </div></div><div class="subgroup"><h4>The Return</h4><div class="session" id="session-260">
+              <input type="checkbox" data-n="260" data-era="4" aria-label="Session 260 complete">
+              <span class="num">260</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/137" target="_blank" rel="noopener">Ps 137</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/15/1" target="_blank" rel="noopener">Ezr 1–3</a></span> <span class="note">— &quot;By the rivers of Babylon&quot;; Cyrus&#x27; decree; the foundation laid</span></span>
+            </div><div class="session" id="session-261">
+              <input type="checkbox" data-n="261" data-era="4" aria-label="Session 261 complete">
+              <span class="num">261</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/15/4" target="_blank" rel="noopener">Ezr 4–6</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/19/126" target="_blank" rel="noopener">Ps 126</a></span> <span class="note">— opposition; the temple finished (515); &quot;like those dreaming&quot;</span></span>
+            </div><div class="session" id="session-262">
+              <input type="checkbox" data-n="262" data-era="4" aria-label="Session 262 complete">
+              <span class="num">262</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/37/1" target="_blank" rel="noopener">Hag 1–2</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/38/1" target="_blank" rel="noopener">Zec 1–3</a></span> <span class="note">— &quot;Is it time to live in your paneled houses?&quot;</span></span>
+            </div><div class="session" id="session-263">
+              <input type="checkbox" data-n="263" data-era="4" aria-label="Session 263 complete">
+              <span class="num">263</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/38/4" target="_blank" rel="noopener">Zec 4–8</a></span> <span class="note">— &quot;Not by military force, nor by power, but by my spirit&quot;</span></span>
+            </div><div class="session" id="session-264">
+              <input type="checkbox" data-n="264" data-era="4" aria-label="Session 264 complete">
+              <span class="num">264</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/38/9" target="_blank" rel="noopener">Zec 9–14</a></span> <span class="note">— the king on a donkey; thirty pieces of silver</span></span>
+            </div><div class="session" id="session-265">
+              <input type="checkbox" data-n="265" data-era="4" aria-label="Session 265 complete">
+              <span class="num">265</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/1" target="_blank" rel="noopener">1 Ch 1–3</a></span> <span class="note">— Ezra&#x27;s genealogies: Adam to the exiles</span></span>
+            </div><div class="session" id="session-266">
+              <input type="checkbox" data-n="266" data-era="4" aria-label="Session 266 complete">
+              <span class="num">266</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/4" target="_blank" rel="noopener">1 Ch 4–6</a></span> <span class="note">— the tribal lines</span></span>
+            </div><div class="session" id="session-267">
+              <input type="checkbox" data-n="267" data-era="4" aria-label="Session 267 complete">
+              <span class="num">267</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/13/7" target="_blank" rel="noopener">1 Ch 7–9</a></span> <span class="note">— the restored community&#x27;s roots</span></span>
+            </div><div class="session" id="session-268">
+              <input type="checkbox" data-n="268" data-era="4" aria-label="Session 268 complete">
+              <span class="num">268</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/17/1" target="_blank" rel="noopener">Es 1–4</a></span> <span class="note">— Esther made queen; &quot;for a time like this&quot;</span></span>
+            </div><div class="session" id="session-269">
+              <input type="checkbox" data-n="269" data-era="4" aria-label="Session 269 complete">
+              <span class="num">269</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/17/5" target="_blank" rel="noopener">Es 5–10</a></span> <span class="note">— Haman&#x27;s fall; the Jews delivered</span></span>
+            </div><div class="session" id="session-270">
+              <input type="checkbox" data-n="270" data-era="4" aria-label="Session 270 complete">
+              <span class="num">270</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/15/7" target="_blank" rel="noopener">Ezr 7–10</a></span> <span class="note">— Ezra comes up to Jerusalem (468)</span></span>
+            </div><div class="session" id="session-271">
+              <input type="checkbox" data-n="271" data-era="4" aria-label="Session 271 complete">
+              <span class="num">271</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/16/1" target="_blank" rel="noopener">Ne 1–4</a></span> <span class="note">— Nehemiah&#x27;s prayer; the wall begun (455)</span></span>
+            </div><div class="session" id="session-272">
+              <input type="checkbox" data-n="272" data-era="4" aria-label="Session 272 complete">
+              <span class="num">272</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/16/5" target="_blank" rel="noopener">Ne 5–7</a></span> <span class="note">— opposition inside and out</span></span>
+            </div><div class="session" id="session-273">
+              <input type="checkbox" data-n="273" data-era="4" aria-label="Session 273 complete">
+              <span class="num">273</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/16/8" target="_blank" rel="noopener">Ne 8–10</a></span> <span class="note">— the Law read aloud; &quot;the joy of Jehovah is your stronghold&quot;</span></span>
+            </div><div class="session" id="session-274">
+              <input type="checkbox" data-n="274" data-era="4" aria-label="Session 274 complete">
+              <span class="num">274</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/16/11" target="_blank" rel="noopener">Ne 11–13</a></span> <span class="note">— the wall inaugurated; Nehemiah&#x27;s reforms</span></span>
+            </div><div class="session" id="session-275">
+              <input type="checkbox" data-n="275" data-era="4" aria-label="Session 275 complete">
+              <span class="num">275</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/39/1" target="_blank" rel="noopener">Mal 1–4</a></span> <span class="note">— &quot;I am Jehovah; I do not change&quot;; the last Hebrew prophet</span></span>
+            </div></div>
+      </div>
+    </details>
+<details class="era-block" id="era-5" data-era="5" data-name="Life of Jesus" data-count="42">
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="era-head-main">
+          <h3>Era 6 — Life of Jesus</h3>
+          <span class="range">Sessions 276–317</span>
+        </span>
+        <span class="era-head-bar"><span class="bar"><span class="fill" id="eraHeadFill-5" style="width:0%"></span></span></span>
+        <span class="era-head-count" id="eraHeadCount-5">0 / 42</span>
+      </summary>
+      <div class="era-body">
+      <p class="era-blurb">The four Gospels merged into one harmony timeline. Each session gathers the writers who cover the same stretch of Jesus&#x27; life, so Matthew, Mark, Luke, and John are heard telling the same events in their own words. Where accounts run parallel, the reading moves quickly because the ground is familiar.</p>
+      <div class="subgroup"><h4>Birth and Preparation</h4><div class="session" id="session-276">
+              <input type="checkbox" data-n="276" data-era="5" aria-label="Session 276 complete">
+              <span class="num">276</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/1" target="_blank" rel="noopener">Joh 1</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/1" target="_blank" rel="noopener">Lu 1</a></span> <span class="note">— the Word; the announcements to Zechariah and Mary</span></span>
+            </div><div class="session" id="session-277">
+              <input type="checkbox" data-n="277" data-era="5" aria-label="Session 277 complete">
+              <span class="num">277</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/1" target="_blank" rel="noopener">Mt 1–2</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/2" target="_blank" rel="noopener">Lu 2</a></span> <span class="note">— the birth; the astrologers; the boy at the temple</span></span>
+            </div><div class="session" id="session-278">
+              <input type="checkbox" data-n="278" data-era="5" aria-label="Session 278 complete">
+              <span class="num">278</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/3" target="_blank" rel="noopener">Mt 3</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/1" target="_blank" rel="noopener">Mr 1</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/3" target="_blank" rel="noopener">Lu 3</a></span> <span class="note">— John the Baptizer; Jesus&#x27; baptism</span></span>
+            </div><div class="session" id="session-279">
+              <input type="checkbox" data-n="279" data-era="5" aria-label="Session 279 complete">
+              <span class="num">279</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/4" target="_blank" rel="noopener">Mt 4</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/4" target="_blank" rel="noopener">Lu 4</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/2" target="_blank" rel="noopener">Joh 2</a></span> <span class="note">— the temptations; water into wine</span></span>
+            </div></div><div class="subgroup"><h4>Early Ministry</h4><div class="session" id="session-280">
+              <input type="checkbox" data-n="280" data-era="5" aria-label="Session 280 complete">
+              <span class="num">280</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/3" target="_blank" rel="noopener">Joh 3–4</a></span> <span class="note">— Nicodemus; the Samaritan woman</span></span>
+            </div><div class="session" id="session-281">
+              <input type="checkbox" data-n="281" data-era="5" aria-label="Session 281 complete">
+              <span class="num">281</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/5" target="_blank" rel="noopener">Lu 5</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/2" target="_blank" rel="noopener">Mr 2–3</a></span> <span class="note">— the catch of fish; &quot;I want mercy, not sacrifice&quot;</span></span>
+            </div><div class="session" id="session-282">
+              <input type="checkbox" data-n="282" data-era="5" aria-label="Session 282 complete">
+              <span class="num">282</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/5" target="_blank" rel="noopener">Joh 5</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/12" target="_blank" rel="noopener">Mt 12</a></span> <span class="note">— the Sabbath controversies</span></span>
+            </div><div class="session" id="session-283">
+              <input type="checkbox" data-n="283" data-era="5" aria-label="Session 283 complete">
+              <span class="num">283</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/5" target="_blank" rel="noopener">Mt 5–6</a></span> <span class="note">— the Sermon on the Mount</span></span>
+            </div><div class="session" id="session-284">
+              <input type="checkbox" data-n="284" data-era="5" aria-label="Session 284 complete">
+              <span class="num">284</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/7" target="_blank" rel="noopener">Mt 7</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/6" target="_blank" rel="noopener">Lu 6</a></span> <span class="note">— the sermon concluded; Luke&#x27;s account</span></span>
+            </div><div class="session" id="session-285">
+              <input type="checkbox" data-n="285" data-era="5" aria-label="Session 285 complete">
+              <span class="num">285</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/8" target="_blank" rel="noopener">Mt 8</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/7" target="_blank" rel="noopener">Lu 7</a></span> <span class="note">— the army officer&#x27;s faith; the widow of Nain</span></span>
+            </div><div class="session" id="session-286">
+              <input type="checkbox" data-n="286" data-era="5" aria-label="Session 286 complete">
+              <span class="num">286</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/11" target="_blank" rel="noopener">Mt 11</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/8" target="_blank" rel="noopener">Lu 8</a></span> <span class="note">— &quot;Come to me… and I will refresh you&quot;</span></span>
+            </div><div class="session" id="session-287">
+              <input type="checkbox" data-n="287" data-era="5" aria-label="Session 287 complete">
+              <span class="num">287</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/13" target="_blank" rel="noopener">Mt 13</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/4" target="_blank" rel="noopener">Mr 4</a></span> <span class="note">— the Kingdom illustrations</span></span>
+            </div><div class="session" id="session-288">
+              <input type="checkbox" data-n="288" data-era="5" aria-label="Session 288 complete">
+              <span class="num">288</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/5" target="_blank" rel="noopener">Mr 5</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/9" target="_blank" rel="noopener">Mt 9</a></span> <span class="note">— the demoniac; Jairus&#x27; daughter</span></span>
+            </div><div class="session" id="session-289">
+              <input type="checkbox" data-n="289" data-era="5" aria-label="Session 289 complete">
+              <span class="num">289</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/10" target="_blank" rel="noopener">Mt 10</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/6" target="_blank" rel="noopener">Mr 6</a></span> <span class="note">— the Twelve sent out; John beheaded</span></span>
+            </div></div><div class="subgroup"><h4>The Great Galilean Ministry</h4><div class="session" id="session-290">
+              <input type="checkbox" data-n="290" data-era="5" aria-label="Session 290 complete">
+              <span class="num">290</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/6" target="_blank" rel="noopener">Joh 6</a></span> <span class="note">— the bread of life; &quot;to whom shall we go away?&quot;</span></span>
+            </div><div class="session" id="session-291">
+              <input type="checkbox" data-n="291" data-era="5" aria-label="Session 291 complete">
+              <span class="num">291</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/14" target="_blank" rel="noopener">Mt 14–15</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/7" target="_blank" rel="noopener">Mr 7</a></span> <span class="note">— walking on the sea; traditions of men</span></span>
+            </div><div class="session" id="session-292">
+              <input type="checkbox" data-n="292" data-era="5" aria-label="Session 292 complete">
+              <span class="num">292</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/16" target="_blank" rel="noopener">Mt 16</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/8" target="_blank" rel="noopener">Mr 8</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/9" target="_blank" rel="noopener">Lu 9</a></span> <span class="note">— &quot;You are the Christ&quot;; the transfiguration</span></span>
+            </div><div class="session" id="session-293">
+              <input type="checkbox" data-n="293" data-era="5" aria-label="Session 293 complete">
+              <span class="num">293</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/17" target="_blank" rel="noopener">Mt 17–18</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/9" target="_blank" rel="noopener">Mr 9</a></span> <span class="note">— faith like a mustard grain; the 77 times</span></span>
+            </div></div><div class="subgroup"><h4>The Later Ministry</h4><div class="session" id="session-294">
+              <input type="checkbox" data-n="294" data-era="5" aria-label="Session 294 complete">
+              <span class="num">294</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/10" target="_blank" rel="noopener">Lu 10–11</a></span> <span class="note">— the 70 sent; the neighborly Samaritan; the model prayer</span></span>
+            </div><div class="session" id="session-295">
+              <input type="checkbox" data-n="295" data-era="5" aria-label="Session 295 complete">
+              <span class="num">295</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/12" target="_blank" rel="noopener">Lu 12–13</a></span> <span class="note">— &quot;Stop being anxious&quot;; the narrow door</span></span>
+            </div><div class="session" id="session-296">
+              <input type="checkbox" data-n="296" data-era="5" aria-label="Session 296 complete">
+              <span class="num">296</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/7" target="_blank" rel="noopener">Joh 7–8</a></span> <span class="note">— at the Festival of Booths; &quot;before Abraham came into existence&quot;</span></span>
+            </div><div class="session" id="session-297">
+              <input type="checkbox" data-n="297" data-era="5" aria-label="Session 297 complete">
+              <span class="num">297</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/9" target="_blank" rel="noopener">Joh 9–10</a></span> <span class="note">— the man born blind; the fine shepherd</span></span>
+            </div><div class="session" id="session-298">
+              <input type="checkbox" data-n="298" data-era="5" aria-label="Session 298 complete">
+              <span class="num">298</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/14" target="_blank" rel="noopener">Lu 14–15</a></span> <span class="note">— the lost sheep, the lost coin, the lost son</span></span>
+            </div><div class="session" id="session-299">
+              <input type="checkbox" data-n="299" data-era="5" aria-label="Session 299 complete">
+              <span class="num">299</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/16" target="_blank" rel="noopener">Lu 16–17</a></span> <span class="note">— the unrighteous steward; the ten lepers</span></span>
+            </div><div class="session" id="session-300">
+              <input type="checkbox" data-n="300" data-era="5" aria-label="Session 300 complete">
+              <span class="num">300</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/11" target="_blank" rel="noopener">Joh 11</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/18" target="_blank" rel="noopener">Lu 18</a></span> <span class="note">— Lazarus; the widow and the judge</span></span>
+            </div><div class="session" id="session-301">
+              <input type="checkbox" data-n="301" data-era="5" aria-label="Session 301 complete">
+              <span class="num">301</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/19" target="_blank" rel="noopener">Mt 19</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/10" target="_blank" rel="noopener">Mr 10</a></span> <span class="note">— marriage; the rich young ruler</span></span>
+            </div><div class="session" id="session-302">
+              <input type="checkbox" data-n="302" data-era="5" aria-label="Session 302 complete">
+              <span class="num">302</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/20" target="_blank" rel="noopener">Mt 20</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/19" target="_blank" rel="noopener">Lu 19</a></span> <span class="note">— the vineyard workers; Zacchaeus</span></span>
+            </div></div><div class="subgroup"><h4>The Final Week</h4><div class="session" id="session-303">
+              <input type="checkbox" data-n="303" data-era="5" aria-label="Session 303 complete">
+              <span class="num">303</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/21" target="_blank" rel="noopener">Mt 21</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/11" target="_blank" rel="noopener">Mr 11</a></span> <span class="note">— the triumphal entry; the temple cleansed</span></span>
+            </div><div class="session" id="session-304">
+              <input type="checkbox" data-n="304" data-era="5" aria-label="Session 304 complete">
+              <span class="num">304</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/12" target="_blank" rel="noopener">Joh 12</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/20" target="_blank" rel="noopener">Lu 20</a></span> <span class="note">— the perfumed oil; &quot;whose image and inscription?&quot;</span></span>
+            </div><div class="session" id="session-305">
+              <input type="checkbox" data-n="305" data-era="5" aria-label="Session 305 complete">
+              <span class="num">305</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/22" target="_blank" rel="noopener">Mt 22</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/12" target="_blank" rel="noopener">Mr 12</a></span> <span class="note">— the greatest commandment; the widow&#x27;s two coins</span></span>
+            </div><div class="session" id="session-306">
+              <input type="checkbox" data-n="306" data-era="5" aria-label="Session 306 complete">
+              <span class="num">306</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/23" target="_blank" rel="noopener">Mt 23</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/21" target="_blank" rel="noopener">Lu 21</a></span> <span class="note">— woes on the scribes; Jerusalem&#x27;s houses abandoned</span></span>
+            </div><div class="session" id="session-307">
+              <input type="checkbox" data-n="307" data-era="5" aria-label="Session 307 complete">
+              <span class="num">307</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/24" target="_blank" rel="noopener">Mt 24</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/13" target="_blank" rel="noopener">Mr 13</a></span> <span class="note">— the sign of the presence</span></span>
+            </div><div class="session" id="session-308">
+              <input type="checkbox" data-n="308" data-era="5" aria-label="Session 308 complete">
+              <span class="num">308</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/25" target="_blank" rel="noopener">Mt 25</a></span> <span class="note">— the virgins; the talents; the sheep and the goats</span></span>
+            </div><div class="session" id="session-309">
+              <input type="checkbox" data-n="309" data-era="5" aria-label="Session 309 complete">
+              <span class="num">309</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/26" target="_blank" rel="noopener">Mt 26</a></span> <span class="note">— the Memorial instituted; Gethsemane; the arrest</span></span>
+            </div><div class="session" id="session-310">
+              <input type="checkbox" data-n="310" data-era="5" aria-label="Session 310 complete">
+              <span class="num">310</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/14" target="_blank" rel="noopener">Mr 14</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/22" target="_blank" rel="noopener">Lu 22</a></span> <span class="note">— the same night in Mark&#x27;s and Luke&#x27;s words</span></span>
+            </div><div class="session" id="session-311">
+              <input type="checkbox" data-n="311" data-era="5" aria-label="Session 311 complete">
+              <span class="num">311</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/13" target="_blank" rel="noopener">Joh 13–14</a></span> <span class="note">— the feet washed; &quot;I am the way and the truth and the life&quot;</span></span>
+            </div><div class="session" id="session-312">
+              <input type="checkbox" data-n="312" data-era="5" aria-label="Session 312 complete">
+              <span class="num">312</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/15" target="_blank" rel="noopener">Joh 15–17</a></span> <span class="note">— the true vine; the prayer for the disciples</span></span>
+            </div></div><div class="subgroup"><h4>Death and Resurrection</h4><div class="session" id="session-313">
+              <input type="checkbox" data-n="313" data-era="5" aria-label="Session 313 complete">
+              <span class="num">313</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/27" target="_blank" rel="noopener">Mt 27</a></span> <span class="note">— the trials; impaled at Golgotha</span></span>
+            </div><div class="session" id="session-314">
+              <input type="checkbox" data-n="314" data-era="5" aria-label="Session 314 complete">
+              <span class="num">314</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/15" target="_blank" rel="noopener">Mr 15</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/23" target="_blank" rel="noopener">Lu 23</a></span> <span class="note">— the same day; &quot;you will be with me in Paradise&quot;</span></span>
+            </div><div class="session" id="session-315">
+              <input type="checkbox" data-n="315" data-era="5" aria-label="Session 315 complete">
+              <span class="num">315</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/18" target="_blank" rel="noopener">Joh 18–19</a></span> <span class="note">— John&#x27;s account; &quot;It has been accomplished!&quot;</span></span>
+            </div><div class="session" id="session-316">
+              <input type="checkbox" data-n="316" data-era="5" aria-label="Session 316 complete">
+              <span class="num">316</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/40/28" target="_blank" rel="noopener">Mt 28</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/41/16" target="_blank" rel="noopener">Mr 16</a></span> <span class="note">— the empty tomb; &quot;I am with you all the days&quot;</span></span>
+            </div><div class="session" id="session-317">
+              <input type="checkbox" data-n="317" data-era="5" aria-label="Session 317 complete">
+              <span class="num">317</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/42/24" target="_blank" rel="noopener">Lu 24</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/43/20" target="_blank" rel="noopener">Joh 20–21</a></span> <span class="note">— the road to Emmaus; Thomas; &quot;Feed my little sheep&quot;</span></span>
+            </div></div>
+      </div>
+    </details>
+<details class="era-block" id="era-6" data-era="6" data-name="Apostolic Era" data-count="48">
+      <summary>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18"/></svg>
+        <span class="era-head-main">
+          <h3>Era 7 — Apostolic Era</h3>
+          <span class="range">Sessions 318–365</span>
+        </span>
+        <span class="era-head-bar"><span class="bar"><span class="fill" id="eraHeadFill-6" style="width:0%"></span></span></span>
+        <span class="era-head-count" id="eraHeadCount-6">0 / 48</span>
+      </summary>
+      <div class="era-body">
+      <p class="era-blurb">Acts carries the storyline from Pentecost 33 C.E. onward, and each letter is read at the point in the journeys when it was written — Galatians after the Jerusalem council, Thessalonians and Corinthians during the missionary tours, the prison letters from Rome. Revelation, received on Patmos about 96 C.E., closes the program.</p>
+      <div class="subgroup"><h4>The Congregation Begins</h4><div class="session" id="session-318">
+              <input type="checkbox" data-n="318" data-era="6" aria-label="Session 318 complete">
+              <span class="num">318</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/1" target="_blank" rel="noopener">Ac 1–2</a></span> <span class="note">— Pentecost; &quot;get baptized, every one of you&quot;</span></span>
+            </div><div class="session" id="session-319">
+              <input type="checkbox" data-n="319" data-era="6" aria-label="Session 319 complete">
+              <span class="num">319</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/3" target="_blank" rel="noopener">Ac 3–5</a></span> <span class="note">— the beautiful gate; &quot;we must obey God as ruler rather than men&quot;</span></span>
+            </div><div class="session" id="session-320">
+              <input type="checkbox" data-n="320" data-era="6" aria-label="Session 320 complete">
+              <span class="num">320</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/6" target="_blank" rel="noopener">Ac 6–7</a></span> <span class="note">— Stephen&#x27;s witness</span></span>
+            </div><div class="session" id="session-321">
+              <input type="checkbox" data-n="321" data-era="6" aria-label="Session 321 complete">
+              <span class="num">321</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/8" target="_blank" rel="noopener">Ac 8–9</a></span> <span class="note">— Philip and the Ethiopian; Saul on the Damascus road</span></span>
+            </div><div class="session" id="session-322">
+              <input type="checkbox" data-n="322" data-era="6" aria-label="Session 322 complete">
+              <span class="num">322</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/10" target="_blank" rel="noopener">Ac 10–12</a></span> <span class="note">— Cornelius; Peter freed</span></span>
+            </div><div class="session" id="session-323">
+              <input type="checkbox" data-n="323" data-era="6" aria-label="Session 323 complete">
+              <span class="num">323</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/13" target="_blank" rel="noopener">Ac 13–14</a></span> <span class="note">— the first missionary tour</span></span>
+            </div></div><div class="subgroup"><h4>The Council and the Second Tour</h4><div class="session" id="session-324">
+              <input type="checkbox" data-n="324" data-era="6" aria-label="Session 324 complete">
+              <span class="num">324</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/15" target="_blank" rel="noopener">Ac 15</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/48/1" target="_blank" rel="noopener">Ga 1–2</a></span> <span class="note">— the Jerusalem council; Paul&#x27;s account of it</span></span>
+            </div><div class="session" id="session-325">
+              <input type="checkbox" data-n="325" data-era="6" aria-label="Session 325 complete">
+              <span class="num">325</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/48/3" target="_blank" rel="noopener">Ga 3–6</a></span> <span class="note">— &quot;For such freedom Christ set us free&quot;</span></span>
+            </div><div class="session" id="session-326">
+              <input type="checkbox" data-n="326" data-era="6" aria-label="Session 326 complete">
+              <span class="num">326</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/59/1" target="_blank" rel="noopener">Jas 1–5</a></span> <span class="note">— faith without works is dead</span></span>
+            </div><div class="session" id="session-327">
+              <input type="checkbox" data-n="327" data-era="6" aria-label="Session 327 complete">
+              <span class="num">327</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/16" target="_blank" rel="noopener">Ac 16–17</a></span> <span class="note">— Lydia; the jailer; Athens</span></span>
+            </div><div class="session" id="session-328">
+              <input type="checkbox" data-n="328" data-era="6" aria-label="Session 328 complete">
+              <span class="num">328</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/52/1" target="_blank" rel="noopener">1 Th 1–5</a></span> <span class="note">— the first inspired letter; the dead in Christ</span></span>
+            </div><div class="session" id="session-329">
+              <input type="checkbox" data-n="329" data-era="6" aria-label="Session 329 complete">
+              <span class="num">329</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/53/1" target="_blank" rel="noopener">2 Th 1–3</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/18" target="_blank" rel="noopener">Ac 18</a></span> <span class="note">— the man of lawlessness; Corinth</span></span>
+            </div></div><div class="subgroup"><h4>The Third Tour and the Letters</h4><div class="session" id="session-330">
+              <input type="checkbox" data-n="330" data-era="6" aria-label="Session 330 complete">
+              <span class="num">330</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/46/1" target="_blank" rel="noopener">1 Co 1–4</a></span> <span class="note">— &quot;I planted, Apollos watered, God kept making it grow&quot;</span></span>
+            </div><div class="session" id="session-331">
+              <input type="checkbox" data-n="331" data-era="6" aria-label="Session 331 complete">
+              <span class="num">331</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/46/5" target="_blank" rel="noopener">1 Co 5–8</a></span> <span class="note">— judging inside; conscience</span></span>
+            </div><div class="session" id="session-332">
+              <input type="checkbox" data-n="332" data-era="6" aria-label="Session 332 complete">
+              <span class="num">332</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/46/9" target="_blank" rel="noopener">1 Co 9–11</a></span> <span class="note">— running to win; the Lord&#x27;s Evening Meal</span></span>
+            </div><div class="session" id="session-333">
+              <input type="checkbox" data-n="333" data-era="6" aria-label="Session 333 complete">
+              <span class="num">333</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/46/12" target="_blank" rel="noopener">1 Co 12–14</a></span> <span class="note">— the gifts; &quot;love never fails&quot;</span></span>
+            </div><div class="session" id="session-334">
+              <input type="checkbox" data-n="334" data-era="6" aria-label="Session 334 complete">
+              <span class="num">334</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/46/15" target="_blank" rel="noopener">1 Co 15–16</a></span> <span class="note">— the resurrection chapter</span></span>
+            </div><div class="session" id="session-335">
+              <input type="checkbox" data-n="335" data-era="6" aria-label="Session 335 complete">
+              <span class="num">335</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/19" target="_blank" rel="noopener">Ac 19–20</a></span> <span class="note">— Ephesus; &quot;there is more happiness in giving&quot;</span></span>
+            </div><div class="session" id="session-336">
+              <input type="checkbox" data-n="336" data-era="6" aria-label="Session 336 complete">
+              <span class="num">336</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/47/1" target="_blank" rel="noopener">2 Co 1–5</a></span> <span class="note">— the God of all comfort; treasure in earthen vessels</span></span>
+            </div><div class="session" id="session-337">
+              <input type="checkbox" data-n="337" data-era="6" aria-label="Session 337 complete">
+              <span class="num">337</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/47/6" target="_blank" rel="noopener">2 Co 6–9</a></span> <span class="note">— &quot;God loves a cheerful giver&quot;</span></span>
+            </div><div class="session" id="session-338">
+              <input type="checkbox" data-n="338" data-era="6" aria-label="Session 338 complete">
+              <span class="num">338</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/47/10" target="_blank" rel="noopener">2 Co 10–13</a></span> <span class="note">— the thorn in the flesh</span></span>
+            </div><div class="session" id="session-339">
+              <input type="checkbox" data-n="339" data-era="6" aria-label="Session 339 complete">
+              <span class="num">339</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/45/1" target="_blank" rel="noopener">Ro 1–3</a></span> <span class="note">— all have sinned; declared righteous by faith</span></span>
+            </div><div class="session" id="session-340">
+              <input type="checkbox" data-n="340" data-era="6" aria-label="Session 340 complete">
+              <span class="num">340</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/45/4" target="_blank" rel="noopener">Ro 4–6</a></span> <span class="note">— Abraham&#x27;s faith; baptized into his death</span></span>
+            </div><div class="session" id="session-341">
+              <input type="checkbox" data-n="341" data-era="6" aria-label="Session 341 complete">
+              <span class="num">341</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/45/7" target="_blank" rel="noopener">Ro 7–8</a></span> <span class="note">— the war within; nothing can separate us</span></span>
+            </div><div class="session" id="session-342">
+              <input type="checkbox" data-n="342" data-era="6" aria-label="Session 342 complete">
+              <span class="num">342</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/45/9" target="_blank" rel="noopener">Ro 9–11</a></span> <span class="note">— the olive tree</span></span>
+            </div><div class="session" id="session-343">
+              <input type="checkbox" data-n="343" data-era="6" aria-label="Session 343 complete">
+              <span class="num">343</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/45/12" target="_blank" rel="noopener">Ro 12–16</a></span> <span class="note">— living sacrifices; the superior authorities</span></span>
+            </div></div><div class="subgroup"><h4>Arrest and Rome</h4><div class="session" id="session-344">
+              <input type="checkbox" data-n="344" data-era="6" aria-label="Session 344 complete">
+              <span class="num">344</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/21" target="_blank" rel="noopener">Ac 21–23</a></span> <span class="note">— Jerusalem; the plot</span></span>
+            </div><div class="session" id="session-345">
+              <input type="checkbox" data-n="345" data-era="6" aria-label="Session 345 complete">
+              <span class="num">345</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/24" target="_blank" rel="noopener">Ac 24–26</a></span> <span class="note">— Felix, Festus, Agrippa</span></span>
+            </div><div class="session" id="session-346">
+              <input type="checkbox" data-n="346" data-era="6" aria-label="Session 346 complete">
+              <span class="num">346</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/44/27" target="_blank" rel="noopener">Ac 27–28</a></span> <span class="note">— the shipwreck; Rome at last</span></span>
+            </div><div class="session" id="session-347">
+              <input type="checkbox" data-n="347" data-era="6" aria-label="Session 347 complete">
+              <span class="num">347</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/49/1" target="_blank" rel="noopener">Eph 1–3</a></span> <span class="note">— the sacred secret; the administration</span></span>
+            </div><div class="session" id="session-348">
+              <input type="checkbox" data-n="348" data-era="6" aria-label="Session 348 complete">
+              <span class="num">348</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/49/4" target="_blank" rel="noopener">Eph 4–6</a></span> <span class="note">— the new personality; the complete suit of armor</span></span>
+            </div><div class="session" id="session-349">
+              <input type="checkbox" data-n="349" data-era="6" aria-label="Session 349 complete">
+              <span class="num">349</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/50/1" target="_blank" rel="noopener">Php 1–4</a></span> <span class="note">— &quot;the peace of God that surpasses all understanding&quot;</span></span>
+            </div><div class="session" id="session-350">
+              <input type="checkbox" data-n="350" data-era="6" aria-label="Session 350 complete">
+              <span class="num">350</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/51/1" target="_blank" rel="noopener">Col 1–4</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/57/1" target="_blank" rel="noopener">Phm</a></span> <span class="note">— the image of the invisible God; Onesimus sent home</span></span>
+            </div><div class="session" id="session-351">
+              <input type="checkbox" data-n="351" data-era="6" aria-label="Session 351 complete">
+              <span class="num">351</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/58/1" target="_blank" rel="noopener">Heb 1–6</a></span> <span class="note">— greater than angels and Moses</span></span>
+            </div><div class="session" id="session-352">
+              <input type="checkbox" data-n="352" data-era="6" aria-label="Session 352 complete">
+              <span class="num">352</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/58/7" target="_blank" rel="noopener">Heb 7–10</a></span> <span class="note">— a priest like Melchizedek; the real sacrifice</span></span>
+            </div><div class="session" id="session-353">
+              <input type="checkbox" data-n="353" data-era="6" aria-label="Session 353 complete">
+              <span class="num">353</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/58/11" target="_blank" rel="noopener">Heb 11–13</a></span> <span class="note">— the cloud of witnesses</span></span>
+            </div></div><div class="subgroup"><h4>The Final Letters</h4><div class="session" id="session-354">
+              <input type="checkbox" data-n="354" data-era="6" aria-label="Session 354 complete">
+              <span class="num">354</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/54/1" target="_blank" rel="noopener">1 Ti 1–6</a></span> <span class="note">— order in the congregation; godly devotion with contentment</span></span>
+            </div><div class="session" id="session-355">
+              <input type="checkbox" data-n="355" data-era="6" aria-label="Session 355 complete">
+              <span class="num">355</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/56/1" target="_blank" rel="noopener">Tit 1–3</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/60/1" target="_blank" rel="noopener">1 Pe 1–2</a></span> <span class="note">— appointing elders; &quot;a chosen race, a royal priesthood&quot;</span></span>
+            </div><div class="session" id="session-356">
+              <input type="checkbox" data-n="356" data-era="6" aria-label="Session 356 complete">
+              <span class="num">356</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/60/3" target="_blank" rel="noopener">1 Pe 3–5</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/61/1" target="_blank" rel="noopener">2 Pe 1–3</a></span> <span class="note">— suffering for righteousness; &quot;new heavens and a new earth&quot;</span></span>
+            </div><div class="session" id="session-357">
+              <input type="checkbox" data-n="357" data-era="6" aria-label="Session 357 complete">
+              <span class="num">357</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/55/1" target="_blank" rel="noopener">2 Ti 1–4</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/65/1" target="_blank" rel="noopener">Jude</a></span> <span class="note">— &quot;I have run the race to the finish&quot;; contend for the faith</span></span>
+            </div><div class="session" id="session-358">
+              <input type="checkbox" data-n="358" data-era="6" aria-label="Session 358 complete">
+              <span class="num">358</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/62/1" target="_blank" rel="noopener">1 Jo 1–5</a></span> <span class="note">— &quot;God is love&quot;</span></span>
+            </div><div class="session" id="session-359">
+              <input type="checkbox" data-n="359" data-era="6" aria-label="Session 359 complete">
+              <span class="num">359</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/63/1" target="_blank" rel="noopener">2 Jo</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/64/1" target="_blank" rel="noopener">3 Jo</a>; <a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/66/1" target="_blank" rel="noopener">Re 1–2</a></span> <span class="note">— walking in the truth; the messages begin</span></span>
+            </div><div class="session" id="session-360">
+              <input type="checkbox" data-n="360" data-era="6" aria-label="Session 360 complete">
+              <span class="num">360</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/66/3" target="_blank" rel="noopener">Re 3–5</a></span> <span class="note">— the seven congregations; the scroll and the Lamb</span></span>
+            </div><div class="session" id="session-361">
+              <input type="checkbox" data-n="361" data-era="6" aria-label="Session 361 complete">
+              <span class="num">361</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/66/6" target="_blank" rel="noopener">Re 6–9</a></span> <span class="note">— the seals and trumpets</span></span>
+            </div><div class="session" id="session-362">
+              <input type="checkbox" data-n="362" data-era="6" aria-label="Session 362 complete">
+              <span class="num">362</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/66/10" target="_blank" rel="noopener">Re 10–12</a></span> <span class="note">— the two witnesses; the birth of the Kingdom</span></span>
+            </div><div class="session" id="session-363">
+              <input type="checkbox" data-n="363" data-era="6" aria-label="Session 363 complete">
+              <span class="num">363</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/66/13" target="_blank" rel="noopener">Re 13–16</a></span> <span class="note">— the wild beasts; the bowls</span></span>
+            </div><div class="session" id="session-364">
+              <input type="checkbox" data-n="364" data-era="6" aria-label="Session 364 complete">
+              <span class="num">364</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/66/17" target="_blank" rel="noopener">Re 17–19</a></span> <span class="note">— Babylon the Great falls; the King of kings</span></span>
+            </div><div class="session" id="session-365">
+              <input type="checkbox" data-n="365" data-era="6" aria-label="Session 365 complete">
+              <span class="num">365</span>
+              <span class="body"><span class="refs"><a href="https://wol.jw.org/en/wol/b/r1/lp-e/nwt/66/20" target="_blank" rel="noopener">Re 20–22</a></span> <span class="note">— the thousand years; &quot;Look! The tent of God is with mankind&quot;</span></span>
+            </div></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="note-card">
+    <strong>How to use this page.</strong> Each session is a 10–14 minute reading. Tap a reference to open it in the New World Translation on wol.jw.org, and tick the box when you're done. Ticks update the counters while the page is open; the page itself is re-published from time to time as the program advances.
+    <div class="synced">Progress last synced: July 19, 2026 — 0 of 365 complete (program not yet started)</div>
+  </div>
+
+  <a class="top-link" href="#top">↑ Back to top</a>
+</div>
+
+<script>
+/* Hydration only — the page is fully pre-rendered and readable without this. */
+const $ = (id) => document.getElementById(id);
+
+/* ---------- theme toggle (JS-only feature; hidden until scripts run) ---------- */
+const root = document.documentElement;
+const toggleBtn = $('themeToggle');
+toggleBtn.hidden = false;
+function applyTheme(t) {
+  root.setAttribute('data-theme', t);
+  toggleBtn.textContent = t === 'dark' ? 'Light' : 'Dark';
+}
+let theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+applyTheme(theme);
+toggleBtn.addEventListener('click', () => {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  applyTheme(theme);
+});
+
+/* ---------- state read from the pre-rendered DOM ---------- */
+const boxes = Array.from(document.querySelectorAll('.session input[type="checkbox"]'));
+const TOTAL = boxes.length;
+const eras = Array.from(document.querySelectorAll('details.era-block')).map((d, i) => ({
+  el: d,
+  name: d.dataset.name,
+  count: Number(d.dataset.count),
+}));
+
+function update() {
+  const done = boxes.filter(b => b.checked).length;
+  const pct = Math.round(done / TOTAL * 100);
+  $('statDone').textContent = done;
+  $('statPct').textContent = pct + '%';
+  $('statPctSub').textContent =
+    done === 0 ? 'just getting started' :
+    done === TOTAL ? 'program complete!' :
+    (TOTAL - done) + ' sessions to go';
+  $('overallFill').style.width = (done / TOTAL * 100) + '%';
+  $('overallCaption').textContent = done + ' of ' + TOTAL;
+  $('overallRemaining').textContent = (TOTAL - done) + ' remaining';
+
+  // next unchecked session (boxes are in document order = session order)
+  const nextBox = boxes.find(b => !b.checked);
+  if (!nextBox) {
+    $('statNext').textContent = '✓';
+    $('statNextSub').textContent = 'all ' + TOTAL + ' read';
+    $('statEra').textContent = eras.length + ' / ' + eras.length;
+    $('statEraSub').textContent = eras[eras.length - 1].name;
+  } else {
+    const n = Number(nextBox.dataset.n);
+    const eraIdx = Number(nextBox.dataset.era);
+    $('statNext').textContent = n;
+    const refs = document.querySelector('#session-' + n + ' .refs');
+    $('statNextSub').textContent = refs ? refs.textContent : '';
+    $('statEra').textContent = (eraIdx + 1) + ' / ' + eras.length;
+    $('statEraSub').textContent = eras[eraIdx].name;
+  }
+
+  // per-era counters and bars
+  eras.forEach((era, i) => {
+    const eraBoxes = boxes.filter(b => Number(b.dataset.era) === i);
+    const eraDone = eraBoxes.filter(b => b.checked).length;
+    const p = eraDone / era.count * 100;
+    $('eraHeadFill-' + i).style.width = p + '%';
+    $('eraHeadCount-' + i).textContent = eraDone + ' / ' + era.count;
+  });
+}
+
+boxes.forEach(cb => {
+  cb.addEventListener('change', () => {
+    document.getElementById('session-' + cb.dataset.n).classList.toggle('done', cb.checked);
+    update();
+  });
+});
+
+update();
+
+</script>
+</body>
+</html>
