@@ -1777,7 +1777,7 @@
   </div>
 
   <div class="note-card">
-    <strong>How to use this page.</strong> Each session is a 10–14 minute reading. Tap a reference to open it in the New World Translation on wol.jw.org, and tick the box when you're done. Ticks update the counters while the page is open; the page itself is re-published from time to time as the program advances.
+    <strong>How to use this page.</strong> Each session is a 10–14 minute reading. Tap a reference to open it in the New World Translation on wol.jw.org, and tick the box when you're done. Ticks are saved to the shared master record, so you both see the same progress here, on any device.
     <div class="synced">Progress last synced: July 19, 2026 — 0 of 365 complete (program not yet started)</div>
   </div>
 
@@ -1788,6 +1788,13 @@
 /* Hydration only — the page is fully pre-rendered and readable without this. */
 const $ = (id) => document.getElementById(id);
 
+/* ---------- safe storage (persists ticks per device; harmless if unavailable) ---------- */
+const store = {
+  get(key) { try { return window.localStorage.getItem(key); } catch (e) { return null; } },
+  set(key, val) { try { window.localStorage.setItem(key, val); } catch (e) {} },
+  remove(key) { try { window.localStorage.removeItem(key); } catch (e) {} },
+};
+
 /* ---------- theme toggle (JS-only feature; hidden until scripts run) ---------- */
 const root = document.documentElement;
 const toggleBtn = $('themeToggle');
@@ -1796,11 +1803,13 @@ function applyTheme(t) {
   root.setAttribute('data-theme', t);
   toggleBtn.textContent = t === 'dark' ? 'Light' : 'Dark';
 }
-let theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+let theme = store.get('cbr-theme') ||
+  (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 applyTheme(theme);
 toggleBtn.addEventListener('click', () => {
   theme = theme === 'dark' ? 'light' : 'dark';
   applyTheme(theme);
+  store.set('cbr-theme', theme);
 });
 
 /* ---------- state read from the pre-rendered DOM ---------- */
@@ -1852,10 +1861,85 @@ function update() {
   });
 }
 
+/* ---------- persistence: overrides relative to the published (baked-in) state ----------
+   The HTML's checked attributes are the synced master record. Each device stores only
+   its local differences, so a re-published page never loses a reader's own ticks. */
+const OVERRIDES_KEY = 'cbr-overrides';
+let overrides = {};
+try { overrides = JSON.parse(store.get(OVERRIDES_KEY) || '{}') || {}; } catch (e) { overrides = {}; }
+
+boxes.forEach(cb => {
+  const n = cb.dataset.n;
+  if (Object.prototype.hasOwnProperty.call(overrides, n) && overrides[n] !== cb.defaultChecked) {
+    cb.checked = overrides[n];
+    document.getElementById('session-' + n).classList.toggle('done', cb.checked);
+  }
+});
+
+function saveOverrides() {
+  const diff = {};
+  boxes.forEach(cb => {
+    if (cb.checked !== cb.defaultChecked) diff[cb.dataset.n] = cb.checked;
+  });
+  if (Object.keys(diff).length) store.set(OVERRIDES_KEY, JSON.stringify(diff));
+  else store.remove(OVERRIDES_KEY);
+  overrides = diff;
+}
+
+/* ---------- shared sync via the master Google Sheet ---------- */
+const API = 'https://script.google.com/macros/s/AKfycbx9xOiy-hPpHHy8je-5CGtVPsbT7ZQGnpysvlj2huxga5e9LbAJQJtj2EkKKU-6WBZa/exec';
+let serverMode = false;
+const syncEl = document.createElement('div');
+syncEl.className = 'synced';
+syncEl.textContent = 'Connecting to shared progress…';
+document.querySelector('.note-card').appendChild(syncEl);
+function setSync(msg) { syncEl.textContent = msg; }
+
+function applyState(doneList) {
+  const set = new Set(doneList.map(Number));
+  boxes.forEach(cb => {
+    const v = set.has(Number(cb.dataset.n));
+    if (cb.checked !== v) {
+      cb.checked = v;
+      document.getElementById('session-' + cb.dataset.n).classList.toggle('done', v);
+    }
+  });
+  update();
+}
+
+function refreshFromServer() {
+  return fetch(API).then(r => r.json()).then(d => {
+    if (d && d.ok) {
+      serverMode = true;
+      store.remove(OVERRIDES_KEY);
+      applyState(d.done);
+      setSync('Shared progress · in sync with the master sheet');
+    }
+  });
+}
+refreshFromServer().catch(() => setSync("Offline — showing this device's last saved ticks"));
+setInterval(() => { refreshFromServer().catch(() => {}); }, 60000);
+
 boxes.forEach(cb => {
   cb.addEventListener('change', () => {
     document.getElementById('session-' + cb.dataset.n).classList.toggle('done', cb.checked);
     update();
+    if (serverMode) {
+      setSync('Saving…');
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ n: Number(cb.dataset.n), done: cb.checked }),
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (d && d.ok) { applyState(d.done); setSync('Shared progress · saved'); }
+          else setSync('Could not save — tick it again in a moment');
+        })
+        .catch(() => setSync('Could not save — check connection and tick again'));
+    } else {
+      saveOverrides();
+    }
   });
 });
 
