@@ -369,12 +369,6 @@ button.era-dot:hover { background: transparent; }
 button.era-dot:hover::before { opacity: 0.75; }
 button.era-dot.is-current:hover::before { opacity: 1; }
 
-.horizon-hint {
-  margin: 2px 0 0;
-  font-size: 0.92rem;
-  opacity: 0.85;
-}
-
 #yearLine { margin-top: 48px; }
 
 .year-key {
