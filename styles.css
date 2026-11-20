@@ -507,6 +507,37 @@ button.era-dot.is-current:hover::before { opacity: 1; }
 
 #yearLine { margin-top: 48px; }
 
+.year-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.kpi {
+  margin: 0;
+  text-align: right;
+  line-height: 1;
+}
+
+.kpi-num {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-cap {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .year-key {
   display: flex;
   flex-wrap: wrap;

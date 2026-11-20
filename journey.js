@@ -90,7 +90,19 @@ function paintYear() {
     if (done) label += ", read";
     mark.setAttribute("aria-label", label);
   });
-  $("yearNow").textContent = "Session " + state.view + " of " + TOTAL + ". " + state.done.size + " read. A filled mark is a finished session.";
+  const done = state.done.size;
+  const percent = completionPercent(done);
+  $("yearNow").textContent = "Session " + state.view + " of " + TOTAL + ". " + done + " read. A filled mark is a finished session.";
+  $("yearPercent").textContent = percent;
+  $("yearKpi").setAttribute("aria-label", done + " of " + TOTAL + " sessions complete, " + percent);
+}
+
+function completionPercent(done) {
+  if (!done) return "0%";
+  const raw = done / TOTAL * 100;
+  if (raw < 1) return "<1%";
+  if (done < TOTAL && raw > 99) return "99%";
+  return Math.round(raw) + "%";
 }
 
 function paintJourney() {
