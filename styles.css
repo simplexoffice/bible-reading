@@ -10,6 +10,7 @@
   --done: #1f6b3a;
   --done-soft: #e5f2ea;
   --fill: #1a4f86;
+  --on-accent: #f4f7fb;
 }
 
 :root[data-theme="dark"] {
@@ -24,6 +25,7 @@
   --done: #8fceaa;
   --done-soft: #163528;
   --fill: #acc8e5;
+  --on-accent: #0d1824;
 }
 
 * { box-sizing: border-box; }
@@ -301,6 +303,131 @@ button:disabled {
 }
 
 #resume:hover { background: none; }
+
+.horizon {
+  margin: -28px -20px 8px;
+  padding: 22px 20px 16px;
+  background: var(--accent);
+  color: var(--on-accent);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.horizon-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.horizon-name {
+  margin: 4px 0 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.dots {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+button.era-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 99px;
+  background: transparent;
+  color: inherit;
+}
+
+button.era-dot::before {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 99px;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+button.era-dot.is-current::before {
+  width: 14px;
+  height: 14px;
+  opacity: 1;
+}
+
+button.era-dot:hover { background: transparent; }
+button.era-dot:hover::before { opacity: 0.75; }
+button.era-dot.is-current:hover::before { opacity: 1; }
+
+.horizon-hint {
+  margin: 2px 0 0;
+  font-size: 0.92rem;
+  opacity: 0.85;
+}
+
+#yearLine { margin-top: 48px; }
+
+.year-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.year-key span { display: inline-flex; align-items: center; gap: 6px; }
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--line);
+  flex: none;
+}
+
+.swatch.is-done { background: var(--fill); }
+.swatch.is-current { background: var(--ink); }
+
+.year {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16px, 1fr));
+  gap: 4px;
+  margin-top: 14px;
+}
+
+button.year-mark {
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+button.year-mark:hover { background: var(--muted); }
+button.year-mark.is-done { background: var(--fill); }
+button.year-mark.is-done:hover { background: var(--fill); filter: brightness(1.08); }
+button.year-mark.is-current { background: var(--ink); }
+button.year-mark.is-current:hover { background: var(--ink); }
+button.year-mark.is-current.is-done {
+  background: var(--done);
+  border: 2px solid var(--ink);
+}
+button.year-mark.is-current.is-done:hover { background: var(--done); }
 
 section { margin-top: 40px; }
 

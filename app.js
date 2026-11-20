@@ -93,6 +93,7 @@ function refreshStatus() {
   }
   updateProgress();
   patchIndex();
+  paintJourney();
 }
 
 function applyQuery(query) {
@@ -345,6 +346,7 @@ function init() {
   $("title").setAttribute("tabindex", "-1");
   buildShelves();
   buildIndex();
+  startJourney();
   loadOverrides();
   renderTrail();
   const pinned = location.hash || store.get("cbr-last");
