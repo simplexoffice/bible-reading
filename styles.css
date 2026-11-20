@@ -288,11 +288,14 @@ button:disabled {
   cursor: default;
 }
 
-.menu-button {
+.menu {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 4;
+}
+
+.menu-button {
   width: 44px;
   height: 44px;
   min-height: 44px;
@@ -318,8 +321,8 @@ button:disabled {
 
 .menu-panel {
   position: absolute;
-  top: calc(100% + 8px);
-  right: 8px;
+  top: calc(100% + 6px);
+  right: 0;
   z-index: 20;
   user-select: text;
   width: min(22rem, calc(100vw - 40px));
@@ -345,6 +348,13 @@ button:disabled {
   color: var(--muted);
 }
 
+.appearance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .menu-heading { margin-top: 18px; }
 
 .menu-note {
@@ -357,9 +367,10 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 0;
   min-height: 44px;
   width: fit-content;
+  flex: none;
   cursor: pointer;
   color: var(--ink);
 }
