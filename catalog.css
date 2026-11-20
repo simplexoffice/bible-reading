@@ -283,12 +283,19 @@ input[type="search"] {
 
 .flag {
   display: none;
+  align-items: center;
+  gap: 4px;
   color: var(--done);
   font-size: 0.8rem;
   font-weight: 700;
 }
 
-.row.is-done .flag { display: inline; }
+.flag svg { display: block; flex: none; }
+
+.row.is-done .flag {
+  display: inline-flex;
+  align-self: center;
+}
 
 #filterEmpty { color: var(--muted); }
 

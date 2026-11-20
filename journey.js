@@ -166,11 +166,39 @@ function slideDetails(details, body, open) {
   setTimeout(finish, 520);
 }
 
+function closeOtherEras(except) {
+  document.querySelectorAll(".era.is-open").forEach((era) => {
+    if (era === except) return;
+    slideDetails(era, era.querySelector(".era-panel"), false);
+  });
+}
+
 function bindDisclosure(details, body) {
   details.querySelector("summary").addEventListener("click", (event) => {
     event.preventDefault();
-    slideDetails(details, body, !details.classList.contains("is-open"));
+    const opening = !details.classList.contains("is-open");
+    if (opening && details.classList.contains("era")) closeOtherEras(details);
+    slideDetails(details, body, opening);
   });
+}
+
+function readFlag() {
+  const flag = el("span", { class: "flag" });
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 16 16");
+  svg.setAttribute("width", "14");
+  svg.setAttribute("height", "14");
+  svg.setAttribute("aria-hidden", "true");
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "M3.2 8.2 L6.4 11.3 L12.8 4.7");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-width", "2");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  svg.append(path);
+  flag.append(svg, el("span", { text: "Read" }));
+  return flag;
 }
 
 function setEraQuiet(era, open) {
@@ -222,7 +250,7 @@ function buildIndex() {
           el("span", { class: "sl", text: labels }),
           session.note ? el("span", { class: "sd", text: session.note }) : el("span"),
         ]),
-        el("span", { class: "flag", text: "Read" }),
+        readFlag(),
       ]);
       button.dataset.search = search;
       button.addEventListener("click", () => {
@@ -241,6 +269,7 @@ function bindFilter() {
   $("filter").addEventListener("input", () => {
     const query = $("filter").value.trim().toLowerCase();
     let shown = 0;
+    let opened = false;
     document.querySelectorAll(".era").forEach((era) => {
       let any = false;
       const eraHit = !query || era.dataset.search.includes(query);
@@ -250,8 +279,9 @@ function bindFilter() {
         if (show) { any = true; shown += 1; }
       });
       era.hidden = Boolean(query) && !any;
-      if (!query) setEraQuiet(era, false);
-      else if (any) setEraQuiet(era, true);
+      const keepOpen = Boolean(query) && any && !opened;
+      setEraQuiet(era, keepOpen);
+      if (keepOpen) opened = true;
     });
     $("filterEmpty").hidden = shown !== 0;
   });
