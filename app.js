@@ -73,6 +73,7 @@ function patchIndex() {
   PLAN.eras.forEach((era, index) => {
     const count = PLAN.sessions.filter((session) => session.era === index && state.done.has(session.n)).length;
     $("eraCount-" + index).textContent = count + " of " + era.count;
+    document.querySelectorAll(".era")[index].classList.toggle("is-current", index === current().era);
   });
 }
 
@@ -93,6 +94,7 @@ function refreshStatus() {
   }
   updateProgress();
   patchIndex();
+  paintJourney();
 }
 
 function applyQuery(query) {
@@ -278,41 +280,6 @@ function buildShelves() {
   });
 }
 
-function buildIndex() {
-  const root = $("eras");
-  PLAN.eras.forEach((era, index) => {
-    const section = el("section", {
-      class: "era",
-      "data-search": era.name.toLowerCase(),
-    });
-    section.append(el("h3", {}, [
-      el("span", { text: "Era " + (index + 1) + " · " + era.name }),
-      el("span", { class: "era-count", id: "eraCount-" + index, text: "0 of " + era.count }),
-    ]));
-    section.append(el("p", { class: "blurb", text: era.blurb }));
-    PLAN.sessions.filter((session) => session.era === index).forEach((session) => {
-      const labels = session.refs.map((ref) => ref.label).join(" · ");
-      const search = [session.n, labels, session.note, session.subjects.join(" "), session.queries.join(" ")]
-        .join(" ").toLowerCase();
-      const button = el("button", { type: "button", class: "row", "data-n": String(session.n) }, [
-        el("span", { class: "sn", text: String(session.n) }),
-        el("span", { class: "sbody" }, [
-          el("span", { class: "sl", text: labels }),
-          session.note ? el("span", { class: "sd", text: session.note }) : el("span"),
-        ]),
-        el("span", { class: "flag", text: "Read" }),
-      ]);
-      button.dataset.search = search;
-      button.addEventListener("click", () => {
-        setView(session.n, { focus: true });
-        if (window.matchMedia("(max-width: 640px)").matches) $("sessionIndex").open = false;
-      });
-      section.append(button);
-    });
-    root.append(section);
-  });
-}
-
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   const button = $("themeToggle");
@@ -345,6 +312,7 @@ function init() {
   $("title").setAttribute("tabindex", "-1");
   buildShelves();
   buildIndex();
+  startJourney();
   loadOverrides();
   renderTrail();
   const pinned = location.hash || store.get("cbr-last");
@@ -357,21 +325,6 @@ function init() {
   $("resume").addEventListener("click", () => {
     const n = nextUnread();
     if (n) setView(n, { focus: true });
-  });
-  $("filter").addEventListener("input", () => {
-    const query = $("filter").value.trim().toLowerCase();
-    let shown = 0;
-    document.querySelectorAll(".era").forEach((era) => {
-      let any = false;
-      const eraHit = !query || era.dataset.search.includes(query);
-      era.querySelectorAll(".row").forEach((row) => {
-        const show = !query || eraHit || row.dataset.search.includes(query);
-        row.hidden = !show;
-        if (show) { any = true; shown += 1; }
-      });
-      era.hidden = Boolean(query) && !any;
-    });
-    $("filterEmpty").hidden = shown !== 0;
   });
   window.addEventListener("hashchange", () => {
     const n = Number(location.hash.replace("#", ""));

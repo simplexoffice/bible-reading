@@ -18,6 +18,11 @@ try {
 <body>
 <a class="skip" href="#title">Skip to the session</a>
 <div class="wrap">
+  <section class="horizon" id="horizon" aria-label="Era">
+    <p class="horizon-kicker" id="horizonKicker">Era</p>
+    <p class="horizon-name" id="horizonName">Loading</p>
+    <div class="dots" id="eraDots" role="group" aria-label="Eras"></div>
+  </section>
   <header>
     <div class="top">
       <div>
@@ -65,14 +70,33 @@ try {
     <div id="trailList"></div>
   </section>
 
+  <section id="yearLine" aria-labelledby="yearHeading">
+    <h2 id="yearHeading">The year</h2>
+    <p class="help" id="yearNow">Each mark is one session.</p>
+    <p class="year-key">
+      <span><span class="swatch is-current"></span> This reading</span>
+      <span><span class="swatch is-done"></span> Read</span>
+      <span><span class="swatch"></span> Ahead</span>
+    </p>
+    <div class="year" id="year"></div>
+  </section>
+
   <details id="sessionIndex">
-    <summary>All 365 sessions</summary>
-    <div class="filter-wrap">
-      <label for="filter">Find a session</label>
-      <input id="filter" type="search" placeholder="Name, book, or number" autocomplete="off">
+    <summary>
+      <span class="index-copy">
+        <span class="index-title">All 365 sessions</span>
+        <span class="index-sub" id="indexSub">Open the full list</span>
+      </span>
+      <span class="fold" aria-hidden="true"><svg viewBox="0 0 16 16" width="18" height="18"><path d="M3 6 L8 11 L13 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </summary>
+    <div class="index-body">
+      <div class="filter-wrap">
+        <label for="filter">Find a session</label>
+        <input id="filter" type="search" placeholder="Name, book, or number" autocomplete="off">
+      </div>
+      <p id="filterEmpty" hidden>No session matches.</p>
+      <div id="eras"></div>
     </div>
-    <p id="filterEmpty" hidden>No session matches.</p>
-    <div id="eras"></div>
   </details>
 
   <footer>
@@ -85,6 +109,7 @@ try {
 </noscript>
 <script src="plan.js"></script>
 <script src="research.js"></script>
+<script src="journey.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
