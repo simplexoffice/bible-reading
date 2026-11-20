@@ -1,41 +1,53 @@
 .chips {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  gap: 2px;
   margin-top: 14px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--line);
 }
 
 .chips[hidden] { display: none; }
 
 button.chip {
-  min-height: 40px;
-  padding: 0 14px;
-  border: 1px solid var(--line);
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
   border-radius: 999px;
-  background: var(--paper);
-  color: var(--muted);
+  background: transparent;
+  color: var(--ink);
   font-weight: 600;
   text-decoration: none;
 }
 
 button.chip:hover {
-  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 45%, transparent);
   color: var(--ink);
-  border-color: var(--muted);
 }
 
 button.chip[aria-checked="true"] {
-  background: var(--soft);
-  color: var(--accent);
-  border-color: var(--accent);
-  font-weight: 700;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 18%, transparent);
 }
 
 button.chip[aria-checked="true"]:hover {
-  background: var(--soft);
-  color: var(--accent);
+  background: var(--paper);
+  color: var(--ink);
   filter: none;
+}
+
+:root[data-theme="dark"] .chips {
+  background: #0f1c2a;
+}
+
+:root[data-theme="dark"] button.chip[aria-checked="true"],
+:root[data-theme="dark"] button.chip[aria-checked="true"]:hover {
+  background: #3a4d62;
 }
 
 .query {
