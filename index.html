@@ -37,9 +37,9 @@ try {
     <p class="note" id="note"></p>
     <div id="reads"></div>
     <div class="nav">
-      <button type="button" id="prev">Previous</button>
-      <button type="button" id="mark" aria-pressed="false">Mark read</button>
-      <button type="button" id="next">Next</button>
+      <button type="button" id="prev"><span class="chev" aria-hidden="true">&lt;&lt;</span> Previous</button>
+      <label class="mark" for="mark"><input type="checkbox" id="mark"> Mark as read</label>
+      <button type="button" id="next">Next <span class="chev" aria-hidden="true">&gt;&gt;</span></button>
     </div>
     <p class="resume-wrap"><button type="button" id="resume" hidden>Resume</button></p>
   </article>
