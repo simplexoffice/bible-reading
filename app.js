@@ -25,13 +25,13 @@ function el(tag, attrs, kids) {
 }
 
 function chipsFor(session) {
-  const chips = session.queries.map((query) => ({ label: query, query }));
-  session.subjects.forEach((subject) => {
-    if (!chips.some((chip) => chip.query.toLowerCase() === subject.toLowerCase())) {
-      chips.push({ label: subject, query: subject });
-    }
-  });
-  return chips.length ? chips : [{ label: "This session", query: "Bible" }];
+  const chips = scriptureQueries(session);
+  return chips.length ? chips : [{ label: "Bible", query: "Bible" }];
+}
+
+function readingReminder(note) {
+  if (!note) return "";
+  return note.charAt(0).toUpperCase() + note.slice(1);
 }
 
 function current() { return PLAN.sessions[state.view - 1]; }
@@ -110,23 +110,27 @@ function renderChips(session) {
   const chips = chipsFor(session);
   const box = $("chips");
   box.replaceChildren();
+  const several = chips.length > 1;
+  box.hidden = !several;
   state.chip = Math.min(state.chip, chips.length - 1);
-  chips.forEach((chip, index) => {
-    const button = el("button", {
-      type: "button",
-      class: "chip",
-      "aria-pressed": index === state.chip ? "true" : "false",
-      text: chip.label,
-    });
-    button.addEventListener("click", () => {
-      state.chip = index;
-      box.querySelectorAll(".chip").forEach((item, itemIndex) => {
-        item.setAttribute("aria-pressed", itemIndex === index ? "true" : "false");
+  if (several) {
+    chips.forEach((chip, index) => {
+      const button = el("button", {
+        type: "button",
+        class: "chip",
+        "aria-pressed": index === state.chip ? "true" : "false",
+        text: chip.label,
       });
-      applyQuery(chip.query);
+      button.addEventListener("click", () => {
+        state.chip = index;
+        box.querySelectorAll(".chip").forEach((item, itemIndex) => {
+          item.setAttribute("aria-pressed", itemIndex === index ? "true" : "false");
+        });
+        applyQuery(chip.query);
+      });
+      box.append(button);
     });
-    box.append(button);
-  });
+  }
   applyQuery(chips[state.chip].query);
 }
 
@@ -137,7 +141,12 @@ function renderSession(focus) {
   if (location.hash !== "#" + session.n) history.replaceState(null, "", "#" + session.n);
   $("meta").textContent = "Session " + session.n + " · Era " + (session.era + 1) + " of 7 · " + era.name;
   $("title").textContent = session.refs.map((ref) => ref.label).join(" · ");
-  $("note").textContent = session.note;
+  const note = $("note");
+  note.replaceChildren();
+  if (session.note) {
+    note.append(el("span", { class: "note-label", text: "In this reading" }));
+    note.append(document.createTextNode(readingReminder(session.note)));
+  }
   const reads = $("reads");
   reads.replaceChildren();
   session.refs.forEach((ref) => {
