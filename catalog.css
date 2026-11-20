@@ -2,42 +2,38 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  column-gap: 20px;
-  row-gap: 0;
-  margin-top: 4px;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 .chips[hidden] { display: none; }
 
 button.chip {
-  min-height: 44px;
-  padding: 8px 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
   color: var(--muted);
-  font-weight: 500;
-  text-align: left;
+  font-weight: 600;
   text-decoration: none;
 }
 
 button.chip:hover {
-  background: transparent;
+  background: var(--paper);
   color: var(--ink);
+  border-color: var(--muted);
 }
 
-button.chip[aria-pressed="true"] {
-  background: transparent;
+button.chip[aria-checked="true"] {
+  background: var(--soft);
   color: var(--accent);
-  border: 0;
+  border-color: var(--accent);
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 0.32em;
-  text-decoration-thickness: 2px;
 }
 
-button.chip[aria-pressed="true"]:hover {
-  background: transparent;
+button.chip[aria-checked="true"]:hover {
+  background: var(--soft);
   color: var(--accent);
   filter: none;
 }
