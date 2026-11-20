@@ -29,7 +29,25 @@ try {
         <p class="kicker">Reading desk</p>
         <h1>Chronological Bible Reading</h1>
       </div>
-      <button type="button" id="themeToggle">Dark</button>
+      <div class="menu">
+        <button type="button" id="menuButton" class="menu-button" aria-expanded="false" aria-controls="menuPanel" aria-label="Open menu">
+          <svg class="icon-menu" viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg class="icon-close" viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <div id="menuPanel" class="menu-panel" hidden>
+          <label class="menu-label" for="themeSelect">Appearance</label>
+          <div class="select-wrap">
+            <select id="themeSelect">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+          <h2 class="menu-heading" id="trailHeading">Recent lookups</h2>
+          <p class="menu-note">Saved in this browser, so you can reopen a search.</p>
+          <div id="trailList" aria-labelledby="trailHeading"></div>
+          <p class="menu-note" id="trailEmpty" hidden>None yet.</p>
+        </div>
+      </div>
     </div>
     <p class="lede">365 numbered sessions follow the order of events, so a missed day never puts you behind. Background opens on the English publications library, shelf by shelf.</p>
     <p class="progress" id="progressText">0 of 365 read</p>
@@ -62,12 +80,6 @@ try {
     <h2 id="booksHeading">Books for this reading</h2>
     <p class="help">Publications from that library chosen for the Bible book in this session.</p>
     <div id="bookList"></div>
-  </section>
-
-  <section id="trail" hidden>
-    <h2>Recent lookups</h2>
-    <p class="help">Saved in this browser, so you can reopen a search.</p>
-    <div id="trailList"></div>
   </section>
 
   <section id="yearLine" aria-labelledby="yearHeading">
