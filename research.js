@@ -63,13 +63,20 @@ function passageChapters(ref) {
   return chapters.length ? chapters : [ref.chapter];
 }
 
+function bookAbbrev(ref) {
+  const match = ref.label.match(/^(.*?)\s+\d/);
+  return (match ? match[1] : ref.label).trim();
+}
+
 function scriptureQueries(session) {
   const chips = [];
   session.refs.forEach((ref) => {
-    const name = BOOKS[ref.book] || ref.label;
+    const name = BOOKS[ref.book] || bookAbbrev(ref);
+    const abbrev = bookAbbrev(ref);
     passageChapters(ref).forEach((chapter) => {
       const query = name + " " + chapter;
-      if (!chips.some((chip) => chip.query === query)) chips.push({ label: query, query });
+      const label = abbrev + " " + chapter;
+      if (!chips.some((chip) => chip.query === query)) chips.push({ label, query });
     });
   });
   return chips;

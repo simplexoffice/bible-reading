@@ -106,6 +106,17 @@ function applyQuery(query) {
   });
 }
 
+function selectChip(index) {
+  state.chip = index;
+  const chips = chipsFor(current());
+  $("chips").querySelectorAll(".chip").forEach((item, itemIndex) => {
+    const on = itemIndex === index;
+    item.setAttribute("aria-checked", on ? "true" : "false");
+    item.tabIndex = on ? 0 : -1;
+  });
+  applyQuery(chips[index].query);
+}
+
 function renderChips(session) {
   const chips = chipsFor(session);
   const box = $("chips");
@@ -115,18 +126,25 @@ function renderChips(session) {
   state.chip = Math.min(state.chip, chips.length - 1);
   if (several) {
     chips.forEach((chip, index) => {
+      const on = index === state.chip;
       const button = el("button", {
         type: "button",
         class: "chip",
-        "aria-pressed": index === state.chip ? "true" : "false",
+        role: "radio",
+        "aria-checked": on ? "true" : "false",
+        tabindex: on ? "0" : "-1",
         text: chip.label,
       });
-      button.addEventListener("click", () => {
-        state.chip = index;
-        box.querySelectorAll(".chip").forEach((item, itemIndex) => {
-          item.setAttribute("aria-pressed", itemIndex === index ? "true" : "false");
-        });
-        applyQuery(chip.query);
+      button.addEventListener("click", () => selectChip(index));
+      button.addEventListener("keydown", (event) => {
+        const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
+        const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
+        if (!forward && !back) return;
+        event.preventDefault();
+        const count = chips.length;
+        const next = (index + (forward ? 1 : -1) + count) % count;
+        selectChip(next);
+        box.querySelectorAll(".chip")[next].focus();
       });
       box.append(button);
     });
