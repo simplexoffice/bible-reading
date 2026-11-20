@@ -79,9 +79,7 @@ function patchIndex() {
 function refreshStatus() {
   const n = state.view;
   const isDone = state.done.has(n);
-  const mark = $("mark");
-  mark.textContent = isDone ? "Mark unread" : "Mark read";
-  mark.setAttribute("aria-pressed", isDone ? "true" : "false");
+  $("mark").checked = isDone;
   $("prev").disabled = n <= 1;
   $("next").disabled = n >= TOTAL;
   const resumeN = nextUnread();
@@ -355,7 +353,7 @@ function init() {
   renderSession(false);
   $("prev").addEventListener("click", () => setView(state.view - 1, { focus: true }));
   $("next").addEventListener("click", () => setView(state.view + 1, { focus: true }));
-  $("mark").addEventListener("click", toggleDone);
+  $("mark").addEventListener("change", toggleDone);
   $("resume").addEventListener("click", () => {
     const n = nextUnread();
     if (n) setView(n, { focus: true });

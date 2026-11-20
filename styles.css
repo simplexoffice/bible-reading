@@ -175,8 +175,86 @@ h1 {
 .nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 8px 12px;
   margin-top: 20px;
+}
+
+.chev {
+  display: inline-block;
+  font-weight: 500;
+  letter-spacing: -0.06em;
+}
+
+#prev .chev { margin-right: 8px; }
+#next .chev { margin-left: 8px; }
+
+.mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  height: 44px;
+  margin: 0;
+  padding: 0 4px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mark input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  border: 0;
+}
+
+.tick {
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.tick svg { display: block; opacity: 0; }
+
+.mark input:checked + .tick {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+
+.mark input:checked + .tick svg { opacity: 1; }
+
+.mark input:focus-visible + .tick {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.mark:has(input:checked) { color: var(--done); }
+
+.mark:has(input:disabled) {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  #next { order: 0; }
+  .mark {
+    order: 1;
+    flex-basis: 100%;
+  }
 }
 
 button, .ghost, summary, input {
@@ -194,25 +272,18 @@ button {
   cursor: pointer;
 }
 
+#prev, #next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
 button:hover { background: var(--soft); }
 
 button:disabled {
   opacity: 0.45;
   cursor: default;
-}
-
-#mark {
-  background: var(--ink);
-  color: var(--bg);
-  border-color: var(--ink);
-}
-
-#mark:hover { filter: brightness(1.08); }
-
-#mark[aria-pressed="true"] {
-  background: var(--done-soft);
-  color: var(--done);
-  border-color: transparent;
 }
 
 #themeToggle { flex: none; }
