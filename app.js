@@ -182,12 +182,19 @@ function renderSession(focus) {
 
 function renderTrail() {
   const items = readTrail();
-  $("trail").hidden = items.length === 0;
   const list = $("trailList");
   list.replaceChildren();
   items.forEach((item) => {
     list.append(el("a", { href: item.href, target: "_blank", rel: "noopener", text: item.label }));
   });
+  $("trailEmpty").hidden = items.length > 0;
+}
+
+function setMenu(open) {
+  const button = $("menuButton");
+  button.setAttribute("aria-expanded", open ? "true" : "false");
+  button.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+  $("menuPanel").hidden = !open;
 }
 
 function setView(n, opts) {
@@ -282,10 +289,7 @@ function buildShelves() {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
-  const button = $("themeToggle");
-  const toLight = theme === "dark";
-  button.textContent = toLight ? "Light" : "Dark";
-  button.setAttribute("aria-label", toLight ? "Switch to light appearance" : "Switch to dark appearance");
+  $("themeSwitch").checked = theme === "dark";
 }
 
 function startingSession() {
@@ -304,10 +308,26 @@ function init() {
   let theme = store.get("cbr-theme");
   if (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches) theme = "dark";
   applyTheme(theme || "light");
-  $("themeToggle").addEventListener("click", () => {
-    theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    applyTheme(theme);
-    store.set("cbr-theme", theme);
+  $("themeSwitch").addEventListener("change", () => {
+    const next = $("themeSwitch").checked ? "dark" : "light";
+    applyTheme(next);
+    store.set("cbr-theme", next);
+  });
+  $("menuButton").addEventListener("click", () => {
+    setMenu($("menuPanel").hidden);
+  });
+  document.addEventListener("click", (event) => {
+    if ($("menuPanel").hidden) return;
+    if (event.target.closest(".menu")) return;
+    setMenu(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || $("menuPanel").hidden) return;
+    setMenu(false);
+    $("menuButton").focus();
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === "cbr-trail") renderTrail();
   });
   $("title").setAttribute("tabindex", "-1");
   buildShelves();

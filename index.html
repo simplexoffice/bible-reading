@@ -19,18 +19,34 @@ try {
 <a class="skip" href="#title">Skip to the session</a>
 <div class="wrap">
   <section class="horizon" id="horizon" aria-label="Era">
+    <div class="menu">
+      <button type="button" id="menuButton" class="menu-button" aria-expanded="false" aria-controls="menuPanel" aria-label="Open menu">
+        <svg class="icon-menu" viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg class="icon-close" viewBox="0 0 20 20" width="22" height="22" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      <div id="menuPanel" class="menu-panel" hidden>
+        <div class="appearance">
+          <p class="menu-label" id="themeLabel">Appearance</p>
+          <label class="switch">
+            <span class="switch-name is-light">Light</span>
+            <input type="checkbox" id="themeSwitch" role="switch" aria-labelledby="themeLabel">
+            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+            <span class="switch-name is-dark">Dark</span>
+          </label>
+        </div>
+        <h2 class="menu-heading" id="trailHeading">Recent lookups</h2>
+        <p class="menu-note">Saved in this browser, so you can reopen a search.</p>
+        <div id="trailList" aria-labelledby="trailHeading"></div>
+        <p class="menu-note" id="trailEmpty" hidden>None yet.</p>
+      </div>
+    </div>
     <p class="horizon-kicker" id="horizonKicker">Era</p>
     <p class="horizon-name" id="horizonName">Loading</p>
     <div class="dots" id="eraDots" role="group" aria-label="Eras"></div>
   </section>
   <header>
-    <div class="top">
-      <div>
-        <p class="kicker">Reading desk</p>
-        <h1>Chronological Bible Reading</h1>
-      </div>
-      <button type="button" id="themeToggle">Dark</button>
-    </div>
+    <p class="kicker">Reading desk</p>
+    <h1>Chronological Bible Reading</h1>
     <p class="lede">365 numbered sessions follow the order of events, so a missed day never puts you behind. Background opens on the English publications library, shelf by shelf.</p>
     <p class="progress" id="progressText">0 of 365 read</p>
     <div class="bar" id="bar" role="progressbar" aria-valuemin="0" aria-valuemax="365" aria-valuenow="0" aria-label="Sessions read"><span id="barFill"></span></div>
@@ -62,12 +78,6 @@ try {
     <h2 id="booksHeading">Books for this reading</h2>
     <p class="help">Publications from that library chosen for the Bible book in this session.</p>
     <div id="bookList"></div>
-  </section>
-
-  <section id="trail" hidden>
-    <h2>Recent lookups</h2>
-    <p class="help">Saved in this browser, so you can reopen a search.</p>
-    <div id="trailList"></div>
   </section>
 
   <section id="yearLine" aria-labelledby="yearHeading">
