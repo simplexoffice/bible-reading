@@ -4,12 +4,12 @@ const SCRIPTURE = "https://wol.jw.org/en/wol/library/r1/lp-e/all-publications/bo
 
 const SHELVES = [
   ["Reference works", "it", "Insight", "Encyclopedia entries for people, places, and words."],
-  ["Reference works", "dx", "Index", "Where this subject is treated across the publications."],
+  ["Reference works", "dx", "Index", "Where this chapter is treated across the publications."],
   ["Reference works", "gloss", "Glossary", "Short definitions used in the publications."],
   ["Publications", "bk", "Books", "Book-length studies on the Books shelf."],
-  ["Publications", "w", "Watchtower", "Magazine and study articles that discuss it."],
+  ["Publications", "w", "Watchtower", "Magazine and study articles that discuss this chapter."],
   ["Publications", "g", "Awake!", "Background written for a general reader."],
-  ["Publications", "mwb", "Meeting Workbook", "Congregation lessons that mention it."],
+  ["Publications", "mwb", "Meeting Workbook", "Congregation lessons that mention this chapter."],
 ];
 
 const GUIDE = {
@@ -30,6 +30,50 @@ const GUIDE = {
   rsg: ["Research Guide for Jehovah’s Witnesses", "An index from a scripture to publications that discuss it."],
   it: ["Insight on the Scriptures", "Encyclopedia of people, places, and words in the Bible."],
 };
+
+const BOOKS = [
+  "",
+  "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",
+  "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel",
+  "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles",
+  "Ezra", "Nehemiah", "Esther", "Job", "Psalm",
+  "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah",
+  "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel",
+  "Amos", "Obadiah", "Jonah", "Micah", "Nahum",
+  "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
+  "Matthew", "Mark", "Luke", "John", "Acts",
+  "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians",
+  "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians",
+  "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews",
+  "James", "1 Peter", "2 Peter", "1 John", "2 John",
+  "3 John", "Jude", "Revelation",
+];
+
+function passageChapters(ref) {
+  const match = ref.label.match(/^(.*?)(?:\s+)(\d+(?:\s*[–-]\s*\d+)?(?:\s*,\s*\d+(?:\s*[–-]\s*\d+)?)*)\s*$/);
+  if (!match || !match[1].trim()) return [ref.chapter];
+  const chapters = [];
+  match[2].split(",").forEach((part) => {
+    const range = part.trim().match(/^(\d+)(?:\s*[–-]\s*(\d+))?$/);
+    if (!range) return;
+    const start = Number(range[1]);
+    const end = Number(range[2] || start);
+    for (let chapter = start; chapter <= end; chapter += 1) chapters.push(chapter);
+  });
+  return chapters.length ? chapters : [ref.chapter];
+}
+
+function scriptureQueries(session) {
+  const chips = [];
+  session.refs.forEach((ref) => {
+    const name = BOOKS[ref.book] || ref.label;
+    passageChapters(ref).forEach((chapter) => {
+      const query = name + " " + chapter;
+      if (!chips.some((chip) => chip.query === query)) chips.push({ label: query, query });
+    });
+  });
+  return chips;
+}
 
 function searchUrl(query, shelf) {
   const params = new URLSearchParams();
