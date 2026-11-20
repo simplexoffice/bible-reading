@@ -289,8 +289,7 @@ function buildShelves() {
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
-  const select = $("themeSelect");
-  if (select.value !== theme) select.value = theme;
+  $("themeSwitch").checked = theme === "dark";
 }
 
 function startingSession() {
@@ -309,8 +308,8 @@ function init() {
   let theme = store.get("cbr-theme");
   if (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches) theme = "dark";
   applyTheme(theme || "light");
-  $("themeSelect").addEventListener("change", () => {
-    const next = $("themeSelect").value === "dark" ? "dark" : "light";
+  $("themeSwitch").addEventListener("change", () => {
+    const next = $("themeSwitch").checked ? "dark" : "light";
     applyTheme(next);
     store.set("cbr-theme", next);
   });

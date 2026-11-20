@@ -34,6 +34,7 @@ function buildHorizon() {
   let tracking = false;
   band.addEventListener("pointerdown", (event) => {
     if (event.button != null && event.button !== 0) return;
+    if (event.target.closest(".menu")) return;
     tracking = true;
     startX = event.clientX;
     startY = event.clientY;
