@@ -15,7 +15,8 @@
   --tone-reading: #ffffff;
   --tone-research: #e3eef8;
   --tone-books: #f6f1e7;
-  --tone-year: #e5f3eb;
+  --tone-year: #d9e6f3;
+  --year-ahead: #f7fbfe;
   --tone-index: #e7edf5;
   --tone-foot: #e8eef4;
 }
@@ -37,7 +38,8 @@
   --tone-reading: #183049;
   --tone-research: #122536;
   --tone-books: #2b241b;
-  --tone-year: #13281f;
+  --tone-year: #17344e;
+  --year-ahead: #2a4d6e;
   --tone-index: #1b2736;
   --tone-foot: #0e1824;
 }
@@ -564,7 +566,7 @@ button.era-dot.is-current:hover::before { opacity: 1; }
   width: 12px;
   height: 12px;
   border-radius: 3px;
-  background: var(--line);
+  background: var(--year-ahead);
   flex: none;
 }
 
@@ -586,7 +588,7 @@ button.year-mark {
   padding: 0;
   border: 0;
   border-radius: 3px;
-  background: var(--line);
+  background: var(--year-ahead);
 }
 
 button.year-mark:hover { background: var(--muted); }
