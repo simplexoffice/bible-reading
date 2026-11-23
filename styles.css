@@ -181,8 +181,8 @@ h1 {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: clamp(6px, 2vw, 12px);
+  justify-content: center;
+  gap: 6px;
   margin-top: 20px;
 }
 
@@ -245,9 +245,9 @@ button {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  min-width: 52px;
+  min-width: 44px;
   margin-top: 4px;
-  padding-inline: 12px;
+  padding-inline: 10px;
   line-height: 1;
 }
 
@@ -570,6 +570,12 @@ h2 {
   margin: 0;
   font-size: 1.15rem;
   letter-spacing: -0.01em;
+}
+
+#researchHeading {
+  font-size: clamp(0.875rem, 4.4vw, 1.15rem);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .help {
