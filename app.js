@@ -97,7 +97,7 @@ function refreshStatus() {
 }
 
 function applyQuery(query) {
-  $("queryLine").textContent = "Library search: " + query;
+  $("queryLine").textContent = query;
   document.querySelectorAll("[data-shelf]").forEach((link) => {
     const name = link.querySelector(".shelf-name").textContent;
     link.href = searchUrl(query, link.dataset.shelf);
@@ -119,10 +119,8 @@ function selectChip(index) {
 function renderChips(session) {
   const chips = chipsFor(session);
   const box = $("chips");
-  const reads = $("chapterReads");
   const pick = $("chapterPick");
   box.replaceChildren();
-  reads.replaceChildren();
   const show = chips.some((chip) => chip.book);
   pick.hidden = !show;
   state.chip = Math.min(state.chip, Math.max(chips.length - 1, 0));
@@ -147,17 +145,18 @@ function renderChips(session) {
       selectChip(next);
       box.querySelectorAll(".chip")[next].focus();
     });
-    box.append(button);
-    if (!chip.book) return;
-    const key = chapterKey(chip.book, chip.chapter);
-    const input = el("input", { type: "checkbox", "aria-label": chip.label + " read", "data-key": key });
-    input.disabled = !state.ready;
-    input.checked = state.chapters.has(key);
-    input.addEventListener("change", () => toggleChapter(chip.book, chip.chapter));
-    reads.append(el("label", { class: "chapter-read" }, [input, readTick()]));
+    const column = el("div", { class: "chip-col" }, [button]);
+    if (chip.book) {
+      const key = chapterKey(chip.book, chip.chapter);
+      const input = el("input", { type: "checkbox", "aria-label": chip.label + " read", "data-key": key });
+      input.disabled = !state.ready;
+      input.checked = state.chapters.has(key);
+      input.addEventListener("change", () => toggleChapter(chip.book, chip.chapter));
+      column.append(el("label", { class: "chapter-read" }, [input, readTick()]));
+    }
+    box.append(column);
   });
   if (chips.length) applyQuery(chips[state.chip].query);
-  alignChapterReads();
 }
 
 function renderSession(focus) {
@@ -368,7 +367,6 @@ function init() {
   renderSession(false);
   $("prev").addEventListener("click", () => setView(state.view - 1, { focus: true }));
   $("next").addEventListener("click", () => setView(state.view + 1, { focus: true }));
-  window.addEventListener("resize", alignChapterReads);
   $("resume").addEventListener("click", () => {
     const n = nextUnread();
     if (n) setView(n, { focus: true });

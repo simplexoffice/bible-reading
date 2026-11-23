@@ -80,15 +80,6 @@ function paintChapterReads() {
   });
 }
 
-function alignChapterReads() {
-  const buttons = [...$("chips").querySelectorAll(".chip")];
-  const marks = [...$("chapterReads").querySelectorAll(".chapter-read")];
-  buttons.forEach((button, index) => {
-    if (!marks[index]) return;
-    marks[index].style.flex = "0 0 " + button.offsetWidth + "px";
-  });
-}
-
 function toggleChapter(book, chapter) {
   const key = chapterKey(book, chapter);
   const session = current();

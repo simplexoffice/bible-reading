@@ -1,29 +1,49 @@
 .chapter-pick {
-  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
   max-width: 100%;
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 .chapter-pick[hidden] { display: none; }
 
 .chips {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: center;
   width: fit-content;
   max-width: 100%;
-  gap: 2px;
+  gap: 0 2px;
   margin-top: 0;
-  padding: 4px;
+  padding: 4px 4px 0;
+  border-radius: 0;
+  background: none;
+}
+
+.chips::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
   border-radius: 999px;
   background: var(--line);
 }
 
-.chapter-reads {
+.chip-col {
+  position: relative;
+  z-index: 1;
   display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-  padding: 0 4px;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .chapter-read {
@@ -31,7 +51,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: 36px;
   margin: 0;
   cursor: pointer;
 }
@@ -49,7 +69,7 @@
 
 button.chip {
   min-height: 36px;
-  padding: 0 16px;
+  padding: 0 clamp(8px, 2.4vw, 16px);
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -75,7 +95,7 @@ button.chip[aria-checked="true"]:hover {
   filter: none;
 }
 
-:root[data-theme="dark"] .chips {
+:root[data-theme="dark"] .chips::before {
   background: #0f1c2a;
 }
 
@@ -85,8 +105,9 @@ button.chip[aria-checked="true"]:hover {
 }
 
 .query {
-  margin: 14px 0 0;
-  font-weight: 600;
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .group {
