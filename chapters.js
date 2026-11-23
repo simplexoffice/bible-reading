@@ -6,7 +6,7 @@ const MAX_KEEP = 16;
 
 function syncKey() {
   const value = store.get(SYNC_KEY);
-  return value && value.length >= 16 ? value : "";
+  return value && value.length >= 1 && value.length <= 128 ? value : "";
 }
 
 function setSyncKeyStatus(message, saved) {
@@ -20,8 +20,12 @@ function wireSyncKey() {
   $("syncKeyForm").addEventListener("submit", (event) => {
     event.preventDefault();
     const value = $("syncKey").value.trim();
-    if (value.length < 16) {
-      setSyncKeyStatus("Use at least 16 characters");
+    if (!value) {
+      setSyncKeyStatus("Enter a sync key");
+      return;
+    }
+    if (value.length > 128) {
+      setSyncKeyStatus("Use at most 128 characters");
       return;
     }
     store.set(SYNC_KEY, value);

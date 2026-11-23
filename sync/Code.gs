@@ -6,7 +6,7 @@ const MAX_KEEP = 16;
 function tokenOk_(given) {
   const expected = PropertiesService.getScriptProperties().getProperty('SYNC_TOKEN') || '';
   const provided = typeof given === 'string' ? given : '';
-  if (expected.length < 16 || provided.length !== expected.length || provided.length > 128) return false;
+  if (!expected || provided.length !== expected.length || provided.length > 128) return false;
   let mismatch = 0;
   for (let i = 0; i < expected.length; i++) mismatch |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
   return mismatch === 0;
