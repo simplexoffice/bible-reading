@@ -394,6 +394,15 @@ button:disabled {
   font-weight: 700;
 }
 
+.sync-key-status.is-error {
+  color: #7a2424;
+  font-weight: 700;
+}
+
+:root[data-theme="dark"] .sync-key-status.is-error {
+  color: #f3c1c1;
+}
+
 .menu-heading { margin-top: 18px; }
 
 .menu-note {
