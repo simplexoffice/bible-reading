@@ -383,6 +383,13 @@ button:disabled {
 
 .sync-key button { flex: none; }
 
+.sync-key-status { min-height: 1.3em; }
+
+.sync-key-status.is-saved {
+  color: var(--done);
+  font-weight: 700;
+}
+
 .menu-heading { margin-top: 18px; }
 
 .menu-note {

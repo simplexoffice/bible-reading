@@ -9,18 +9,49 @@ function syncKey() {
   return value && value.length >= 16 ? value : "";
 }
 
+function setSyncKeyStatus(message, saved) {
+  const status = $("syncKeyStatus");
+  status.textContent = message;
+  status.classList.toggle("is-saved", Boolean(saved));
+}
+
 function wireSyncKey() {
+  if (syncKey()) setSyncKeyStatus("Saved on this device", true);
   $("syncKeyForm").addEventListener("submit", (event) => {
     event.preventDefault();
     const value = $("syncKey").value.trim();
     if (value.length < 16) {
-      setSync("Sync key must be at least 16 characters");
+      setSyncKeyStatus("Use at least 16 characters");
       return;
     }
     store.set(SYNC_KEY, value);
     $("syncKey").value = "";
-    setSync("Sync key saved on this device");
+    setSyncKeyStatus("Checking the key…");
+    confirmSyncKey();
+  });
+}
+
+function confirmSyncKey() {
+  const key = syncKey();
+  if (!key) return Promise.resolve(false);
+  return fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify({ token: key }),
+  }).then((response) => response.json()).then((data) => {
+    if (data && data.error === "unauthorized") {
+      store.remove(SYNC_KEY);
+      $("syncKey").value = key;
+      setSyncKeyStatus("Key was not accepted");
+      return false;
+    }
+    setSyncKeyStatus("Saved", true);
+    store.remove(CHAPTERS_SYNCED);
     if (state.server) refreshFromServer().catch(() => setSync("Showing the last shared record"));
+    return true;
+  }).catch(() => {
+    setSyncKeyStatus("Saved on this device", true);
+    return false;
   });
 }
 let chapterSync = null;
