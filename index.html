@@ -37,9 +37,10 @@ try {
         <form id="syncKeyForm" class="sync-key">
           <label class="menu-label" for="syncKey">Sync key</label>
           <div class="sync-key-row">
-            <input id="syncKey" type="password" autocomplete="off" maxlength="128" spellcheck="false">
+            <input id="syncKey" type="password" autocomplete="off" maxlength="128" spellcheck="false" aria-describedby="syncKeyStatus">
             <button type="submit">Save</button>
           </div>
+          <p class="menu-note sync-key-status" id="syncKeyStatus" role="status"></p>
         </form>
         <h2 class="menu-heading" id="trailHeading">Recent lookups</h2>
         <p class="menu-note">Saved in this browser, so you can reopen a search.</p>
