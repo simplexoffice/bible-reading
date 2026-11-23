@@ -180,9 +180,9 @@ h1 {
 .nav {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: clamp(6px, 2vw, 12px);
   margin-top: 20px;
 }
 
@@ -245,8 +245,9 @@ button {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  min-width: 64px;
-  padding-inline: 16px;
+  min-width: 52px;
+  margin-top: 4px;
+  padding-inline: 12px;
   line-height: 1;
 }
 
