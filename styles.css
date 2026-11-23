@@ -383,7 +383,11 @@ button:disabled {
 
 .sync-key button { flex: none; }
 
-.sync-key-status { min-height: 1.3em; }
+.sync-key-status {
+  min-height: 1.3em;
+  color: var(--ink);
+  font-weight: 600;
+}
 
 .sync-key-status.is-saved {
   color: var(--done);
