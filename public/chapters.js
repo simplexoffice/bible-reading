@@ -39,7 +39,25 @@ function readSyncJson(response) {
   });
 }
 
+function acceptKey(key, claimed) {
+  if (claimed) {
+    $("syncKey").type = "text";
+    $("syncKey").value = key;
+    $("syncKeyReveal").textContent = "Hide";
+    setSyncKeyStatus("Saved. Type this same key on your other device.", "saved");
+    return;
+  }
+  $("syncKey").value = "";
+  setSyncKeyStatus("Saved", "saved");
+}
+
 function wireSyncKey() {
+  $("syncKeyReveal").addEventListener("click", () => {
+    const input = $("syncKey");
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    $("syncKeyReveal").textContent = show ? "Hide" : "Show";
+  });
   if (syncKey()) {
     setSyncKeyStatus("Checking the key…");
     confirmSyncKey();
@@ -76,10 +94,9 @@ function confirmSyncKey() {
       return false;
     }
     if (data.ok || data.error === "nothing to save") {
-      $("syncKey").value = "";
-      setSyncKeyStatus("Saved", "saved");
       store.remove(CHAPTERS_SYNCED);
-      if (state.server) refreshFromServer().catch(() => setSync("Showing the last shared record"));
+      acceptKey(key, data.claimed === true);
+      refreshFromServer().catch(() => setSync("Showing the last shared record"));
       return true;
     }
     $("syncKey").value = key;
@@ -248,11 +265,13 @@ function persistRead(body, retried) {
   }).then(readSyncJson).then((data) => {
     if (data && data.ok && Array.isArray(data.chapters)) {
       applyServer(data.done || [], data.chapters);
+      if (data.claimed) acceptKey(key, true);
       setSync("Shared progress · saved");
       return true;
     }
     if (data && data.ok) {
       applyServer(data.done || []);
+      if (data.claimed) acceptKey(key, true);
       setSync("Shared progress · saved");
       return true;
     }

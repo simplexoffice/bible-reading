@@ -1,5 +1,5 @@
 /* Reading desk. One session, then the publications library. */
-const API = "https://script.google.com/macros/s/AKfycbx9xOiy-hPpHHy8je-5CGtVPsbT7ZQGnpysvlj2huxga5e9LbAJQJtj2EkKKU-6WBZa/exec";
+const API = "/api/progress";
 const OVERRIDES = "cbr-overrides";
 const TOTAL = 365;
 
@@ -267,15 +267,28 @@ function applyServer(doneList, chapterList) {
 }
 
 function refreshFromServer() {
-  const opts = typeof AbortSignal !== "undefined" && AbortSignal.timeout
-    ? { signal: AbortSignal.timeout(8000) }
-    : {};
-  return fetch(API, opts).then((response) => response.json()).then((data) => {
+  const key = syncKey();
+  if (!key) {
+    setSync("Add the sync key in the menu");
+    return Promise.resolve(false);
+  }
+  const opts = { headers: { "X-Sync-Key": key } };
+  if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) opts.signal = AbortSignal.timeout(8000);
+  return fetch(API, opts).then(readSyncJson).then((data) => {
     if (data && data.ok) {
       applyServer(data.done || [], data.chapters);
       setSync("Shared progress · in sync");
       return true;
     }
+    if (data && data.error === "unauthorized") {
+      store.remove(SYNC_KEY);
+      $("syncKey").value = key;
+      setSyncKeyStatus("Key was not accepted", "error");
+      setSync("Sync key was rejected");
+      return false;
+    }
+    if (data && data.error === "unconfigured") return false;
+    noteSharedRecordDown();
     return false;
   });
 }
@@ -376,8 +389,7 @@ function init() {
     state.ready = true;
     paintChapterReads();
   };
-  refreshFromServer().then((ok) => {
-    if (!ok) noteSharedRecordDown();
+  refreshFromServer().then(() => {
     if (!pinned) setView(nextUnread() || 1, { scroll: false });
   }).catch(() => noteSharedRecordDown()).finally(releaseMark);
   setInterval(() => {
