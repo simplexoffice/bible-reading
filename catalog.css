@@ -166,10 +166,10 @@ button.chip[aria-checked="true"]:hover {
 #trailList a:hover { text-decoration: underline; }
 
 #sessionIndex {
-  margin-top: 48px;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  margin-top: 0;
+  background: var(--tone-index);
+  border: 0;
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -181,7 +181,7 @@ button.chip[aria-checked="true"]:hover {
   gap: 16px;
   min-height: 64px;
   padding: 12px 16px;
-  background: var(--soft);
+  background: color-mix(in srgb, var(--ink) 7%, var(--tone-index));
   cursor: pointer;
   font-weight: 700;
 }
@@ -218,7 +218,7 @@ button.chip[aria-checked="true"]:hover {
 
 #sessionIndex.is-open > summary { border-bottom: 1px solid var(--line); }
 
-.index-body { padding: 8px 12px 16px; background: var(--paper); }
+.index-body { padding: 8px 12px 16px; background: transparent; }
 
 summary {
   cursor: pointer;
