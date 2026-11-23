@@ -1,5 +1,5 @@
 /* Reading desk. One session, then the publications library. */
-const API = "https://script.google.com/macros/s/AKfycbx9xOiy-hPpHHy8je-5CGtVPsbT7ZQGnpysvlj2huxga5e9LbAJQJtj2EkKKU-6WBZa/exec";
+const API = "https://script.google.com/macros/s/AKfycby-vMYT_CsQOJhx1Qn0YdK54UuHAI4UYhAV6ZROmjLlqiMsZwHWo7oRk0VOVcngJi-a/exec";
 const OVERRIDES = "cbr-overrides";
 const TOTAL = 365;
 
