@@ -1,6 +1,32 @@
 /* Which chapters are read. The shared record keeps each chapter; this browser keeps a copy. */
 const CHAPTERS = "cbr-chapters";
 const CHAPTERS_SYNCED = "cbr-chapters-synced";
+const SYNC_KEY = "cbr-sync-key";
+const MAX_KEEP = 16;
+
+function syncKey() {
+  const value = store.get(SYNC_KEY);
+  return value && value.length >= 16 ? value : "";
+}
+
+function wireSyncKey() {
+  const note = $("syncKeyNote");
+  const saved = "A sync key is saved on this device. Paste a new one to replace it.";
+  if (syncKey()) note.textContent = saved;
+  $("syncKeyForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const value = $("syncKey").value.trim();
+    if (value.length < 16) {
+      setSync("Sync key must be at least 16 characters");
+      return;
+    }
+    store.set(SYNC_KEY, value);
+    $("syncKey").value = "";
+    note.textContent = saved;
+    setSync("Sync key saved on this device");
+    if (state.server) refreshFromServer().catch(() => setSync("Showing the last shared record"));
+  });
+}
 let chapterSync = null;
 
 function chapterKey(book, chapter) {
@@ -135,22 +161,25 @@ function publishLocalChapters(upload) {
     store.set(CHAPTERS_SYNCED, "1");
     return;
   }
-  if (chapterSync) return;
-  chapterSync = persistRead({ keep: upload }).finally(() => { chapterSync = null; });
+  if (!syncKey() || chapterSync) return;
+  chapterSync = persistRead({ keep: upload.slice(0, MAX_KEEP) }).finally(() => { chapterSync = null; });
 }
 
 function persistRead(body, retried) {
-  if (!state.server) {
+  const key = syncKey();
+  if (!state.server || !key) {
     if (body.n != null) saveOverrides();
     saveChapters();
-    setSync("Saved on this device");
+    setSync(state.server && !key ? "Add the sync key in the menu" : "Saved on this device");
     return Promise.resolve(false);
   }
+  const payload = Object.assign({}, body, { token: key });
+  if (Array.isArray(payload.keep)) payload.keep = payload.keep.slice(0, MAX_KEEP);
   setSync("Saving…");
   return fetch(API, {
     method: "POST",
     headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   }).then((response) => response.json()).then((data) => {
     if (data && data.ok && Array.isArray(data.chapters)) {
       applyServer(data.done || [], data.chapters);
@@ -161,6 +190,10 @@ function persistRead(body, retried) {
       applyServer(data.done || []);
       setSync("Shared progress · saved");
       return true;
+    }
+    if (data && data.error === "unauthorized") {
+      setSync("Sync key was rejected");
+      return false;
     }
     if (!retried && body.n != null && (body.chapter != null || body.keep)) {
       return persistRead({ n: body.n, done: body.done === true }, true);
