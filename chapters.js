@@ -10,9 +10,6 @@ function syncKey() {
 }
 
 function wireSyncKey() {
-  const note = $("syncKeyNote");
-  const saved = "A sync key is saved on this device. Paste a new one to replace it.";
-  if (syncKey()) note.textContent = saved;
   $("syncKeyForm").addEventListener("submit", (event) => {
     event.preventDefault();
     const value = $("syncKey").value.trim();
@@ -22,7 +19,6 @@ function wireSyncKey() {
     }
     store.set(SYNC_KEY, value);
     $("syncKey").value = "";
-    note.textContent = saved;
     setSync("Sync key saved on this device");
     if (state.server) refreshFromServer().catch(() => setSync("Showing the last shared record"));
   });
