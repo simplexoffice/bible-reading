@@ -1,8 +1,35 @@
-/* Which chapters are read, kept in this browser. A session is read when every chapter in it is. */
+/* Which chapters are read. The shared record keeps each chapter; this browser keeps a copy. */
 const CHAPTERS = "cbr-chapters";
+const CHAPTERS_SYNCED = "cbr-chapters-synced";
+let chapterSync = null;
 
 function chapterKey(book, chapter) {
   return book + ":" + chapter;
+}
+
+function chapterKeyOk(key) {
+  return typeof key === "string" && /^\d{1,3}:\d{1,3}$/.test(key);
+}
+
+function keysCoveredBySessions(doneSet) {
+  const covered = new Set();
+  doneSet.forEach((n) => {
+    const session = PLAN.sessions[n - 1];
+    if (session) sessionChapterKeys(session).forEach((key) => covered.add(key));
+  });
+  return covered;
+}
+
+function chaptersToUpload(serverKeys, doneSet) {
+  if (store.get(CHAPTERS_SYNCED)) return [];
+  const onServer = new Set(serverKeys);
+  const covered = keysCoveredBySessions(doneSet);
+  const upload = [];
+  state.chapters.forEach((key) => {
+    if (!chapterKeyOk(key) || onServer.has(key) || covered.has(key)) return;
+    upload.push(key);
+  });
+  return upload;
 }
 
 function sessionChapterKeys(session) {
@@ -84,14 +111,68 @@ function toggleChapter(book, chapter) {
   const key = chapterKey(book, chapter);
   const session = current();
   const wasDone = state.done.has(session.n);
-  if (state.chapters.has(key)) state.chapters.delete(key);
-  else state.chapters.add(key);
+  const read = !state.chapters.has(key);
+  if (read) state.chapters.add(key);
+  else state.chapters.delete(key);
   saveChapters();
   const nowDone = sessionFullyRead(session);
-  paintChapterReads();
-  if (nowDone === wasDone) return;
-  if (nowDone) state.done.add(session.n);
-  else state.done.delete(session.n);
-  refreshStatus();
-  persistSession(session.n, nowDone);
+  if (nowDone !== wasDone) {
+    if (nowDone) state.done.add(session.n);
+    else state.done.delete(session.n);
+    refreshStatus();
+  } else paintChapterReads();
+  const body = { chapter: key, read };
+  if (nowDone !== wasDone) {
+    body.n = session.n;
+    body.done = nowDone;
+    if (!nowDone) body.keep = sessionChapterKeys(session).filter((item) => state.chapters.has(item));
+  }
+  persistRead(body);
+}
+
+function publishLocalChapters(upload) {
+  if (!upload.length) {
+    store.set(CHAPTERS_SYNCED, "1");
+    return;
+  }
+  if (chapterSync) return;
+  chapterSync = persistRead({ keep: upload }).finally(() => { chapterSync = null; });
+}
+
+function persistRead(body, retried) {
+  if (!state.server) {
+    if (body.n != null) saveOverrides();
+    saveChapters();
+    setSync("Saved on this device");
+    return Promise.resolve(false);
+  }
+  setSync("Saving…");
+  return fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(body),
+  }).then((response) => response.json()).then((data) => {
+    if (data && data.ok && Array.isArray(data.chapters)) {
+      applyServer(data.done || [], data.chapters);
+      setSync("Shared progress · saved");
+      return true;
+    }
+    if (data && data.ok) {
+      applyServer(data.done || []);
+      setSync("Shared progress · saved");
+      return true;
+    }
+    if (!retried && body.n != null && (body.chapter != null || body.keep)) {
+      return persistRead({ n: body.n, done: body.done === true }, true);
+    }
+    if (body.chapter != null || body.keep) {
+      setSync("Saved on this device");
+      return false;
+    }
+    setSync("Could not save — try again in a moment");
+    return false;
+  }).catch(() => {
+    setSync("Could not save — check the connection and try again");
+    return false;
+  });
 }

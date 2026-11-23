@@ -246,33 +246,24 @@ function loadOverrides() {
   } catch (e) { /* keep an empty set */ }
 }
 
-function applyServer(doneList) {
+function applyServer(doneList, chapterList) {
   state.server = true;
-  state.done = new Set(doneList.map(Number));
+  state.done = new Set((doneList || []).map(Number).filter((n) => n >= 1 && n <= TOTAL));
   store.remove(OVERRIDES);
+  if (Array.isArray(chapterList)) {
+    const upload = chaptersToUpload(chapterList.filter(chapterKeyOk), state.done);
+    state.chapters = new Set(chapterList.filter(chapterKeyOk));
+    fillChaptersForDoneSessions();
+    upload.forEach((key) => state.chapters.add(key));
+    saveChapters();
+    refreshStatus();
+    publishLocalChapters(upload);
+    return;
+  }
   fillChaptersForDoneSessions();
   dropFullChaptersForOpenSessions();
   saveChapters();
   refreshStatus();
-}
-
-function persistSession(n, isDone) {
-  if (state.server) {
-    setSync("Saving…");
-    fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({ n, done: isDone }),
-    }).then((response) => response.json()).then((data) => {
-      if (data && data.ok) {
-        applyServer(data.done || []);
-        setSync("Shared progress · saved");
-      } else setSync("Could not save — try again in a moment");
-    }).catch(() => setSync("Could not save — check the connection and try again"));
-  } else {
-    saveOverrides();
-    setSync("Saved on this device");
-  }
 }
 
 function refreshFromServer() {
@@ -281,7 +272,7 @@ function refreshFromServer() {
     : {};
   return fetch(API, opts).then((response) => response.json()).then((data) => {
     if (data && data.ok) {
-      applyServer(data.done || []);
+      applyServer(data.done || [], data.chapters);
       setSync("Shared progress · in sync");
       return true;
     }
