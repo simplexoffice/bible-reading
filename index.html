@@ -34,6 +34,14 @@ try {
             <span class="switch-name is-dark">Dark</span>
           </label>
         </div>
+        <form id="syncKeyForm" class="sync-key">
+          <label class="menu-label" for="syncKey">Sync key</label>
+          <p class="menu-note" id="syncKeyNote">Paste the script property SYNC_TOKEN. Checks stay on this device until it matches.</p>
+          <div class="sync-key-row">
+            <input id="syncKey" type="password" autocomplete="off" maxlength="128" spellcheck="false" aria-describedby="syncKeyNote">
+            <button type="submit">Save</button>
+          </div>
+        </form>
         <h2 class="menu-heading" id="trailHeading">Recent lookups</h2>
         <p class="menu-note">Saved in this browser, so you can reopen a search.</p>
         <div id="trailList" aria-labelledby="trailHeading"></div>

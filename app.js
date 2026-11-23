@@ -327,6 +327,7 @@ function init() {
     applyTheme(next);
     store.set("cbr-theme", next);
   });
+  wireSyncKey();
   $("menuButton").addEventListener("click", () => {
     setMenu($("menuPanel").hidden);
   });

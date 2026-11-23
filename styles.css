@@ -362,6 +362,27 @@ button:disabled {
   gap: 16px;
 }
 
+.sync-key { margin-top: 16px; }
+
+.sync-key-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sync-key input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.sync-key button { flex: none; }
+
 .menu-heading { margin-top: 18px; }
 
 .menu-note {
