@@ -27,6 +27,7 @@ async function seed() {
     await q("select pg_advisory_xact_lock(7272742)");
     const rows = await q("select count(*)::int as n from sessions");
     if (Number(rows[0].n) > 0) return;
+    // Seed with owner's actual progress: 71 sessions done (1-71), chapters 5:5 and 5:6
     await q("insert into sessions (n, done) select n, n <= 71 from generate_series(1, 365) as n");
     await q("insert into chapters (key) values ('5:5'), ('5:6')");
   });
