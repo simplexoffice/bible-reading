@@ -76,7 +76,7 @@ function scriptureQueries(session) {
     passageChapters(ref).forEach((chapter) => {
       const query = name + " " + chapter;
       const label = abbrev + " " + chapter;
-      if (!chips.some((chip) => chip.query === query)) chips.push({ label, query });
+      if (!chips.some((chip) => chip.query === query)) chips.push({ label, query, book: ref.book, chapter });
     });
   });
   return chips;

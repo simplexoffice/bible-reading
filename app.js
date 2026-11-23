@@ -11,7 +11,7 @@ const store = {
   remove(key) { try { localStorage.removeItem(key); } catch (e) {} },
 };
 
-const state = { done: new Set(), server: false, view: 1, chip: 0 };
+const state = { done: new Set(), chapters: new Set(), server: false, ready: false, view: 1, chip: 0 };
 
 function el(tag, attrs, kids) {
   const node = document.createElement(tag);
@@ -79,8 +79,6 @@ function patchIndex() {
 
 function refreshStatus() {
   const n = state.view;
-  const isDone = state.done.has(n);
-  $("mark").checked = isDone;
   $("prev").disabled = n <= 1;
   $("next").disabled = n >= TOTAL;
   const resumeN = nextUnread();
@@ -95,6 +93,7 @@ function refreshStatus() {
   updateProgress();
   patchIndex();
   paintJourney();
+  paintChapterReads();
 }
 
 function applyQuery(query) {
@@ -120,36 +119,45 @@ function selectChip(index) {
 function renderChips(session) {
   const chips = chipsFor(session);
   const box = $("chips");
+  const reads = $("chapterReads");
+  const pick = $("chapterPick");
   box.replaceChildren();
-  const several = chips.length > 1;
-  box.hidden = !several;
-  state.chip = Math.min(state.chip, chips.length - 1);
-  if (several) {
-    chips.forEach((chip, index) => {
-      const on = index === state.chip;
-      const button = el("button", {
-        type: "button",
-        class: "chip",
-        role: "radio",
-        "aria-checked": on ? "true" : "false",
-        tabindex: on ? "0" : "-1",
-        text: chip.label,
-      });
-      button.addEventListener("click", () => selectChip(index));
-      button.addEventListener("keydown", (event) => {
-        const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
-        const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
-        if (!forward && !back) return;
-        event.preventDefault();
-        const count = chips.length;
-        const next = (index + (forward ? 1 : -1) + count) % count;
-        selectChip(next);
-        box.querySelectorAll(".chip")[next].focus();
-      });
-      box.append(button);
+  reads.replaceChildren();
+  const show = chips.some((chip) => chip.book);
+  pick.hidden = !show;
+  state.chip = Math.min(state.chip, Math.max(chips.length - 1, 0));
+  chips.forEach((chip, index) => {
+    const on = index === state.chip;
+    const button = el("button", {
+      type: "button",
+      class: "chip",
+      role: "radio",
+      "aria-checked": on ? "true" : "false",
+      tabindex: on ? "0" : "-1",
+      text: chip.label,
     });
-  }
-  applyQuery(chips[state.chip].query);
+    button.addEventListener("click", () => selectChip(index));
+    button.addEventListener("keydown", (event) => {
+      const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
+      const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
+      if (!forward && !back) return;
+      event.preventDefault();
+      const count = chips.length;
+      const next = (index + (forward ? 1 : -1) + count) % count;
+      selectChip(next);
+      box.querySelectorAll(".chip")[next].focus();
+    });
+    box.append(button);
+    if (!chip.book) return;
+    const key = chapterKey(chip.book, chip.chapter);
+    const input = el("input", { type: "checkbox", "aria-label": chip.label + " read", "data-key": key });
+    input.disabled = !state.ready;
+    input.checked = state.chapters.has(key);
+    input.addEventListener("change", () => toggleChapter(chip.book, chip.chapter));
+    reads.append(el("label", { class: "chapter-read" }, [input, readTick()]));
+  });
+  if (chips.length) applyQuery(chips[state.chip].query);
+  alignChapterReads();
 }
 
 function renderSession(focus) {
@@ -243,29 +251,13 @@ function applyServer(doneList) {
   state.server = true;
   state.done = new Set(doneList.map(Number));
   store.remove(OVERRIDES);
+  fillChaptersForDoneSessions();
+  dropFullChaptersForOpenSessions();
+  saveChapters();
   refreshStatus();
 }
 
-function refreshFromServer() {
-  const opts = typeof AbortSignal !== "undefined" && AbortSignal.timeout
-    ? { signal: AbortSignal.timeout(8000) }
-    : {};
-  return fetch(API, opts).then((response) => response.json()).then((data) => {
-    if (data && data.ok) {
-      applyServer(data.done || []);
-      setSync("Shared progress · in sync");
-      return true;
-    }
-    return false;
-  });
-}
-
-function toggleDone() {
-  const n = state.view;
-  const isDone = !state.done.has(n);
-  if (isDone) state.done.add(n);
-  else state.done.delete(n);
-  refreshStatus();
+function persistSession(n, isDone) {
   if (state.server) {
     setSync("Saving…");
     fetch(API, {
@@ -282,6 +274,20 @@ function toggleDone() {
     saveOverrides();
     setSync("Saved on this device");
   }
+}
+
+function refreshFromServer() {
+  const opts = typeof AbortSignal !== "undefined" && AbortSignal.timeout
+    ? { signal: AbortSignal.timeout(8000) }
+    : {};
+  return fetch(API, opts).then((response) => response.json()).then((data) => {
+    if (data && data.ok) {
+      applyServer(data.done || []);
+      setSync("Shared progress · in sync");
+      return true;
+    }
+    return false;
+  });
 }
 
 function buildShelves() {
@@ -352,14 +358,17 @@ function init() {
   buildIndex();
   startJourney();
   loadOverrides();
+  loadChapters();
+  fillChaptersForDoneSessions();
+  promoteFullSessions();
+  saveChapters();
   renderTrail();
   const pinned = location.hash || store.get("cbr-last");
   state.view = startingSession();
-  $("mark").disabled = true;
   renderSession(false);
   $("prev").addEventListener("click", () => setView(state.view - 1, { focus: true }));
   $("next").addEventListener("click", () => setView(state.view + 1, { focus: true }));
-  $("mark").addEventListener("change", toggleDone);
+  window.addEventListener("resize", alignChapterReads);
   $("resume").addEventListener("click", () => {
     const n = nextUnread();
     if (n) setView(n, { focus: true });
@@ -373,7 +382,10 @@ function init() {
     if (!link) return;
     remember(link.dataset.track, link.href);
   });
-  const releaseMark = () => { $("mark").disabled = false; };
+  const releaseMark = () => {
+    state.ready = true;
+    paintChapterReads();
+  };
   refreshFromServer().then((ok) => {
     if (!ok) setSync("Saved on this device");
     if (!pinned) setView(nextUnread() || 1, { scroll: false });
