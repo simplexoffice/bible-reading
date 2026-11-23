@@ -92,7 +92,10 @@ body {
 }
 
 .wrap > header { background: var(--tone-intro); }
-#reading { background: var(--tone-reading); }
+#reading {
+  background: var(--tone-reading);
+  padding-bottom: 12px;
+}
 #research { background: var(--tone-research); }
 #books { background: var(--tone-books); }
 #yearLine { background: var(--tone-year); }
@@ -424,7 +427,8 @@ button:disabled {
   outline-offset: 2px;
 }
 
-.resume-wrap { margin: 12px 0 0; min-height: 1.5rem; }
+.resume-wrap { margin: 8px 0 0; }
+.resume-wrap:has(#resume[hidden]) { display: none; }
 
 #resume {
   background: none;
