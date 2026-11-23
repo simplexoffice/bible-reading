@@ -377,9 +377,9 @@ function init() {
     paintChapterReads();
   };
   refreshFromServer().then((ok) => {
-    if (!ok) setSync("Saved on this device");
+    if (!ok) noteSharedRecordDown();
     if (!pinned) setView(nextUnread() || 1, { scroll: false });
-  }).catch(() => setSync("Saved on this device")).finally(releaseMark);
+  }).catch(() => noteSharedRecordDown()).finally(releaseMark);
   setInterval(() => {
     if (state.server) refreshFromServer().catch(() => setSync("Showing the last shared record"));
   }, 60000);

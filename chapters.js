@@ -9,27 +9,53 @@ function syncKey() {
   return value && value.length >= 1 && value.length <= 128 ? value : "";
 }
 
-function setSyncKeyStatus(message, saved) {
+function setSyncKeyStatus(message, kind) {
   const status = $("syncKeyStatus");
   status.textContent = message;
-  status.classList.toggle("is-saved", Boolean(saved));
+  status.classList.toggle("is-saved", kind === "saved");
+  status.classList.toggle("is-error", kind === "error");
+}
+
+function noteSharedRecordDown() {
+  setSync("The shared record did not answer. Checks stay on this device.");
+}
+
+function readSyncJson(response) {
+  return response.text().then((text) => {
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      const error = new Error("unreachable");
+      error.unreachable = true;
+      throw error;
+    }
+    if (!data || typeof data !== "object") {
+      const error = new Error("unreachable");
+      error.unreachable = true;
+      throw error;
+    }
+    return data;
+  });
 }
 
 function wireSyncKey() {
-  if (syncKey()) setSyncKeyStatus("Saved on this device", true);
+  if (syncKey()) {
+    setSyncKeyStatus("Checking the key…");
+    confirmSyncKey();
+  }
   $("syncKeyForm").addEventListener("submit", (event) => {
     event.preventDefault();
     const value = $("syncKey").value.trim();
     if (!value) {
-      setSyncKeyStatus("Enter a sync key");
+      setSyncKeyStatus("Enter a sync key", "error");
       return;
     }
     if (value.length > 128) {
-      setSyncKeyStatus("Use at most 128 characters");
+      setSyncKeyStatus("Use at most 128 characters", "error");
       return;
     }
     store.set(SYNC_KEY, value);
-    $("syncKey").value = "";
     setSyncKeyStatus("Checking the key…");
     confirmSyncKey();
   });
@@ -42,19 +68,26 @@ function confirmSyncKey() {
     method: "POST",
     headers: { "Content-Type": "text/plain" },
     body: JSON.stringify({ token: key }),
-  }).then((response) => response.json()).then((data) => {
-    if (data && data.error === "unauthorized") {
+  }).then(readSyncJson).then((data) => {
+    if (data.error === "unauthorized") {
       store.remove(SYNC_KEY);
       $("syncKey").value = key;
-      setSyncKeyStatus("Key was not accepted");
+      setSyncKeyStatus("Key was not accepted", "error");
       return false;
     }
-    setSyncKeyStatus("Saved", true);
-    store.remove(CHAPTERS_SYNCED);
-    if (state.server) refreshFromServer().catch(() => setSync("Showing the last shared record"));
-    return true;
+    if (data.ok || data.error === "nothing to save") {
+      $("syncKey").value = "";
+      setSyncKeyStatus("Saved", "saved");
+      store.remove(CHAPTERS_SYNCED);
+      if (state.server) refreshFromServer().catch(() => setSync("Showing the last shared record"));
+      return true;
+    }
+    $("syncKey").value = key;
+    setSyncKeyStatus("The shared record did not answer. Checks stay on this device.", "error");
+    return false;
   }).catch(() => {
-    setSyncKeyStatus("Saved on this device", true);
+    $("syncKey").value = key;
+    setSyncKeyStatus("The shared record did not answer. Checks stay on this device.", "error");
     return false;
   });
 }
@@ -201,7 +234,8 @@ function persistRead(body, retried) {
   if (!state.server || !key) {
     if (body.n != null) saveOverrides();
     saveChapters();
-    setSync(state.server && !key ? "Add the sync key in the menu" : "Saved on this device");
+    if (!key) setSync("Add the sync key in the menu");
+    else noteSharedRecordDown();
     return Promise.resolve(false);
   }
   const payload = Object.assign({}, body, { token: key });
@@ -211,7 +245,7 @@ function persistRead(body, retried) {
     method: "POST",
     headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload),
-  }).then((response) => response.json()).then((data) => {
+  }).then(readSyncJson).then((data) => {
     if (data && data.ok && Array.isArray(data.chapters)) {
       applyServer(data.done || [], data.chapters);
       setSync("Shared progress · saved");
@@ -223,20 +257,20 @@ function persistRead(body, retried) {
       return true;
     }
     if (data && data.error === "unauthorized") {
+      store.remove(SYNC_KEY);
+      $("syncKey").value = key;
+      setSyncKeyStatus("Key was not accepted", "error");
       setSync("Sync key was rejected");
       return false;
     }
     if (!retried && body.n != null && (body.chapter != null || body.keep)) {
       return persistRead({ n: body.n, done: body.done === true }, true);
     }
-    if (body.chapter != null || body.keep) {
-      setSync("Saved on this device");
-      return false;
-    }
-    setSync("Could not save — try again in a moment");
+    noteSharedRecordDown();
     return false;
-  }).catch(() => {
-    setSync("Could not save — check the connection and try again");
+  }).catch((error) => {
+    if (error && error.unreachable) noteSharedRecordDown();
+    else setSync("Could not save — check the connection and try again");
     return false;
   });
 }
