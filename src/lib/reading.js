@@ -45,6 +45,8 @@ export function sessionChapters(session) {
       if (chips.some((chip) => chip.key === key)) return;
       chips.push({
         key,
+        book: ref.book,
+        chapter,
         label: `${abbrev} ${chapter}`,
         query: `${name} ${chapter}`,
         href: `https://wol.jw.org/en/wol/b/r1/lp-e/nwt/${ref.book}/${chapter}`,

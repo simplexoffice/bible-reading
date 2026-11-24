@@ -2,11 +2,18 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PLAN, TOTAL, sessionByNumber, sessionChapters } from "../src/lib/reading";
+import { LIBRARY } from "../src/lib/research";
+import { Horizon } from "./horizon";
+import { LibraryPanel } from "./library-panel";
+import { ReadingPanel } from "./reading-panel";
+import { SessionIndex } from "./session-index";
+import { YearLine } from "./year-line";
 
 const API = "/api/progress";
 const KEY = "cbr-sync-key";
 const LAST = "cbr-last";
 const THEME = "cbr-theme";
+const TRAIL = "cbr-trail";
 
 const seedDone = () => Array.from({ length: 71 }, (_, index) => index + 1);
 const seedChapters = () => ["5:5", "5:6"];
@@ -20,6 +27,16 @@ function writeStorage(name, value) {
     if (value) localStorage.setItem(name, value);
     else localStorage.removeItem(name);
   } catch (error) { /* this browser is not storing the desk */ }
+}
+
+function readTrail() {
+  try {
+    const items = JSON.parse(readStorage(TRAIL) || "[]");
+    if (!Array.isArray(items)) return [];
+    return items.filter((item) => (
+      item && typeof item.label === "string" && typeof item.href === "string" && item.href.startsWith("https://wol.jw.org/")
+    )).slice(0, 8);
+  } catch (error) { return []; }
 }
 
 async function postRecord(body) {
@@ -37,26 +54,39 @@ export default function Desk() {
   const [done, setDone] = useState(seedDone);
   const [chapters, setChapters] = useState(seedChapters);
   const [view, setView] = useState(72);
+  const [chip, setChip] = useState(0);
   const [syncKey, setSyncKey] = useState("");
   const [draftKey, setDraftKey] = useState("");
+  const [reveal, setReveal] = useState(false);
   const [status, setStatus] = useState("Saved progress is on this device until you save a sync key.");
-  const [query, setQuery] = useState("");
+  const [statusKind, setStatusKind] = useState("");
   const [theme, setTheme] = useState("light");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [trail, setTrail] = useState([]);
 
   const session = sessionByNumber(view);
   const era = PLAN.eras[session.era];
   const chips = useMemo(() => sessionChapters(session), [session]);
   const chapterSet = useMemo(() => new Set(chapters), [chapters]);
   const doneSet = useMemo(() => new Set(done), [done]);
-  const percent = Math.round((done.length / TOTAL) * 100);
+  const selected = chips[Math.min(chip, Math.max(chips.length - 1, 0))];
+  const resume = useMemo(() => {
+    for (let n = 1; n <= TOTAL; n += 1) {
+      if (!doneSet.has(n)) return n === view ? null : n;
+    }
+    return null;
+  }, [doneSet, view]);
 
   useEffect(() => {
-    const storedTheme = readStorage(THEME);
+    const storedTheme = readStorage(THEME) || document.documentElement.dataset.theme;
     const nextTheme = storedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     setTheme(nextTheme);
     document.documentElement.dataset.theme = nextTheme;
+    const hashed = Number(window.location.hash.replace("#", ""));
     const last = Number(readStorage(LAST));
-    if (last >= 1 && last <= TOTAL) setView(last);
+    const start = hashed >= 1 && hashed <= TOTAL ? hashed : last >= 1 && last <= TOTAL ? last : 72;
+    setView(start);
+    setTrail(readTrail());
     const key = readStorage(KEY);
     if (!key) return;
     setSyncKey(key);
@@ -68,20 +98,65 @@ export default function Desk() {
         setDone(data.done || []);
         setChapters(data.chapters || []);
         setStatus("Shared progress is in sync.");
+        setStatusKind("is-saved");
       })
-      .catch(() => setStatus("The shared record did not answer. Checks stay on this device."));
+      .catch(() => {
+        setStatus("The shared record did not answer. Checks stay on this device.");
+        setStatusKind("is-error");
+      });
   }, []);
 
-  function remember(next) {
-    setView(next);
-    writeStorage(LAST, String(next));
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    function onKey(event) {
+      if (event.key !== "Escape") return;
+      setMenuOpen(false);
+      document.getElementById("menuButton")?.focus();
+    }
+    function onClick(event) {
+      if (event.target.closest(".menu")) return;
+      setMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("click", onClick);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("click", onClick);
+    };
+  }, [menuOpen]);
+
+  function go(next, focus) {
+    const n = Math.min(TOTAL, Math.max(1, next));
+    setView(n);
+    setChip(0);
+    writeStorage(LAST, String(n));
+    if (window.location.hash !== `#${n}`) window.history.replaceState(null, "", `#${n}`);
+    if (focus) document.getElementById("title")?.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
   }
 
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
+  function onEra(index) {
+    if (index < 0 || index >= PLAN.eras.length || index === session.era) return;
+    const found = PLAN.sessions.find((item) => item.era === index);
+    if (found) go(found.n, true);
+  }
+
+  function applyTheme(next) {
     setTheme(next);
     document.documentElement.dataset.theme = next;
     writeStorage(THEME, next);
+  }
+
+  function trackLookup(event) {
+    const link = event.target.closest("a[data-track]");
+    if (!link || !link.href.startsWith("https://wol.jw.org/")) return;
+    const href = link.href;
+    const label = link.dataset.track;
+    setTrail((current) => {
+      const next = [{ label, href }, ...current.filter((item) => item.href !== href)].slice(0, 8);
+      writeStorage(TRAIL, JSON.stringify(next));
+      return next;
+    });
   }
 
   async function saveKey(event) {
@@ -89,9 +164,11 @@ export default function Desk() {
     const key = draftKey.trim();
     if (!key || key.length > 128) {
       setStatus("Enter a sync key of at most 128 characters.");
+      setStatusKind("is-error");
       return;
     }
     setStatus("Saving the sync key…");
+    setStatusKind("");
     try {
       const data = await postRecord({ token: key });
       writeStorage(KEY, key);
@@ -99,113 +176,105 @@ export default function Desk() {
       setDone(data.done || []);
       setChapters(data.chapters || []);
       setStatus(data.claimed ? "Saved. Type this same key on your other device." : "Shared progress is in sync.");
+      setStatusKind("is-saved");
     } catch (error) {
       setStatus(error.message === "unauthorized" ? "That sync key was not accepted." : "The shared record did not answer. Checks stay on this device.");
+      setStatusKind("is-error");
     }
   }
 
-  async function toggleChapter(chip) {
-    const read = !chapterSet.has(chip.key);
-    const nextChapters = read ? [...chapters, chip.key] : chapters.filter((key) => key !== chip.key);
-    const keys = chips.map((item) => item.key);
+  async function toggleChapter(item) {
+    const read = !chapterSet.has(item.key);
+    const nextChapters = read ? [...chapters, item.key] : chapters.filter((key) => key !== item.key);
+    const keys = chips.map((chipItem) => chipItem.key);
     const fully = keys.length > 0 && keys.every((key) => nextChapters.includes(key));
     const wasDone = doneSet.has(session.n);
-    const nextDone = fully
-      ? (wasDone ? done : [...done, session.n])
-      : done.filter((n) => n !== session.n);
+    const nextDone = fully ? (wasDone ? done : [...done, session.n]) : done.filter((n) => n !== session.n);
     setChapters(nextChapters);
     setDone(nextDone);
     if (!syncKey) {
       setStatus("Add a sync key to keep this check on your other device.");
+      setStatusKind("");
       return;
     }
-    const body = { token: syncKey, chapter: chip.key, read };
+    const body = { token: syncKey, chapter: item.key, read };
     if (fully !== wasDone) {
       body.n = session.n;
       body.done = fully;
       if (!fully) body.keep = keys.filter((key) => nextChapters.includes(key));
     }
     setStatus("Saving…");
+    setStatusKind("");
     try {
       const data = await postRecord(body);
       setDone(data.done || []);
       setChapters(data.chapters || []);
       setStatus("Shared progress is saved.");
+      setStatusKind("is-saved");
     } catch (error) {
       setStatus("The shared record did not answer. Checks stay on this device.");
+      setStatusKind("is-error");
     }
   }
 
-  const matches = PLAN.sessions.filter((item) => {
-    const text = `${item.n} ${item.note} ${(item.refs || []).map((ref) => ref.label).join(" ")}`.toLowerCase();
-    return text.includes(query.trim().toLowerCase());
-  }).slice(0, 40);
-
   return (
-    <main className="wrap">
-      <div className="top">
-        <div>
-          <p className="kicker">Reading desk</p>
-          <h1>Chronological Bible Reading</h1>
-          <p className="lede">{done.length} of {TOTAL} read · {percent}% of the year</p>
-          <div className="bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-            <span style={{ width: `${percent}%` }} />
+    <div className="wrap" onClick={trackLookup}>
+      <a className="skip" href="#title">Skip to the session</a>
+      <Horizon
+        eraIndex={session.era}
+        menuOpen={menuOpen}
+        onToggleMenu={() => setMenuOpen((open) => !open)}
+        onEra={onEra}
+        theme={theme}
+        onTheme={applyTheme}
+        trail={trail}
+      />
+      <header>
+        <p className="kicker">Reading desk</p>
+        <h1>Chronological Bible Reading</h1>
+        <p className="lede">365 numbered sessions follow the order of events, so a missed day never puts you behind. Background opens on the English publications library, shelf by shelf.</p>
+        <p className="progress" id="progressText">{done.length} of {TOTAL} read</p>
+        <div className="bar" id="bar" role="progressbar" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={done.length} aria-label="Sessions read">
+          <span id="barFill" style={{ width: `${(done.length / TOTAL) * 100}%` }} />
+        </div>
+      </header>
+      <ReadingPanel
+        session={session}
+        era={era}
+        chips={chips}
+        chipIndex={chip}
+        chapterSet={chapterSet}
+        onChip={setChip}
+        onToggleChapter={toggleChapter}
+        onPrev={() => go(view - 1, true)}
+        onNext={() => go(view + 1, true)}
+        resume={resume}
+        onResume={() => resume && go(resume, true)}
+      />
+      <LibraryPanel session={session} query={selected?.query || ""} />
+      <YearLine view={view} doneSet={doneSet} onPick={(n) => go(n, true)} />
+      <SessionIndex view={view} eraIndex={session.era} doneSet={doneSet} onPick={(n) => go(n, true)} />
+      <footer>
+        <form id="syncKeyForm" className="sync-key" onSubmit={saveKey}>
+          <label className="menu-label" htmlFor="syncKey">Sync key</label>
+          <div className="sync-key-row">
+            <input
+              id="syncKey"
+              type={reveal ? "text" : "password"}
+              autoComplete="off"
+              maxLength={128}
+              spellCheck={false}
+              aria-describedby="syncLine"
+              value={draftKey}
+              onChange={(event) => setDraftKey(event.target.value)}
+            />
+            <button type="button" id="syncKeyReveal" onClick={() => setReveal((shown) => !shown)}>{reveal ? "Hide" : "Show"}</button>
+            <button type="submit">Save</button>
           </div>
-        </div>
-        <button type="button" className="ghost" onClick={toggleTheme}>{theme === "dark" ? "Light" : "Dark"}</button>
-      </div>
-
-      <section className="card" aria-label="Sync">
-        <form onSubmit={saveKey} className="row">
-          <input
-            type="password"
-            value={draftKey}
-            maxLength={128}
-            autoComplete="off"
-            placeholder="Sync key"
-            aria-label="Sync key"
-            onChange={(event) => setDraftKey(event.target.value)}
-          />
-          <button className="primary" type="submit">Save</button>
+          <p className={`menu-note sync-key-status${statusKind ? ` ${statusKind}` : ""}`} id="syncLine" role="status">{status}</p>
         </form>
-        <p className="status" role="status">{status}</p>
-      </section>
-
-      <article className="card">
-        <p className="kicker">Session {session.n} · {era.name}</p>
-        <h2>{session.note ? session.note.charAt(0).toUpperCase() + session.note.slice(1) : era.name}</h2>
-        <div className="chapters">
-          {chips.map((chip) => (
-            <label key={chip.key} className={chapterSet.has(chip.key) ? "chapter is-read" : "chapter"}>
-              <input type="checkbox" checked={chapterSet.has(chip.key)} onChange={() => toggleChapter(chip)} />
-              <a href={chip.href}>{chip.label}</a>
-            </label>
-          ))}
-        </div>
-        {(session.subjects || []).length > 0 && <p className="help">{session.subjects.join(" · ")}</p>}
-        <div className="nav">
-          <button type="button" onClick={() => remember(Math.max(1, view - 1))} disabled={view === 1}>Previous</button>
-          <button type="button" onClick={() => remember(Math.min(TOTAL, view + 1))} disabled={view === TOTAL}>Next</button>
-          {chips[0] && <a href={`https://wol.jw.org/en/wol/s/r1/lp-e?q=${encodeURIComponent(chips[0].query)}`}>Research {chips[0].query}</a>}
-        </div>
-      </article>
-
-      <section className="card">
-        <label htmlFor="find">Find a session</label>
-        <input id="find" type="search" value={query} placeholder="Name, book, or number" onChange={(event) => setQuery(event.target.value)} />
-        <div className="sessions">
-          {matches.map((item) => (
-            <button
-              type="button"
-              key={item.n}
-              className={`session${doneSet.has(item.n) ? " is-done" : ""}${item.n === view ? " is-current" : ""}`}
-              onClick={() => remember(item.n)}
-            >
-              {item.n}. {item.note || PLAN.eras[item.era].name}
-            </button>
-          ))}
-        </div>
-      </section>
-    </main>
+        <p>Ticks are saved in this browser and, when the connection works, on the shared reading record. Publication text stays on <a href={LIBRARY}>Watchtower Online Library</a>.</p>
+      </footer>
+    </div>
   );
 }
