@@ -230,7 +230,9 @@
 
 .dots {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 20rem;
   margin-top: 8px;
 }
 
@@ -238,7 +240,10 @@ button.era-dot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
+  flex: 1 1 0;
+  width: auto;
+  max-width: 44px;
+  min-width: 0;
   height: 44px;
   min-height: 44px;
   padding: 0;
