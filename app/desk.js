@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PLAN, TOTAL, sessionByNumber, sessionChapters } from "../src/lib/reading";
 import { LIBRARY } from "../src/lib/research";
 import { Horizon } from "./horizon";
@@ -67,7 +67,9 @@ export default function Desk() {
   const [statusKind, setStatusKind] = useState("");
   const [theme, setTheme] = useState("light");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [changingKey, setChangingKey] = useState(false);
   const [trail, setTrail] = useState([]);
+  const writing = useRef(false);
 
   const session = sessionByNumber(view);
   const era = PLAN.eras[session.era];
@@ -96,20 +98,48 @@ export default function Desk() {
     if (!key) return;
     setSyncKey(key);
     setDraftKey(key);
-    fetch(API, { headers: { "x-sync-key": key } })
-      .then((response) => response.json())
-      .then((data) => {
+    setStatus("Checking shared progress…");
+  }, []);
+
+  useEffect(() => {
+    if (!syncKey) return undefined;
+    let stopped = false;
+    async function pull() {
+      if (writing.current || stopped) return;
+      try {
+        const response = await fetch(API, { headers: { "x-sync-key": syncKey } });
+        const data = await response.json();
+        if (stopped || writing.current) return;
+        if (data?.error === "unauthorized") {
+          writeStorage(KEY, "");
+          setSyncKey("");
+          setStatus("That sync key was not accepted.");
+          setStatusKind("is-error");
+          return;
+        }
         if (!data?.ok) throw new Error(data?.error || "unreachable");
         setDone(data.done || []);
         setChapters(data.chapters || []);
         setStatus("Shared progress is in sync.");
         setStatusKind("is-saved");
-      })
-      .catch(() => {
+      } catch (error) {
+        if (stopped || writing.current) return;
         setStatus("The shared record did not answer. Checks stay on this device.");
         setStatusKind("is-error");
-      });
-  }, []);
+      }
+    }
+    pull();
+    const timer = setInterval(pull, 30000);
+    function onShow() {
+      if (document.visibilityState === "visible") pull();
+    }
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+  }, [syncKey]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -180,7 +210,8 @@ export default function Desk() {
       setSyncKey(key);
       setDone(data.done || []);
       setChapters(data.chapters || []);
-      setStatus(data.claimed ? "Saved. Type this same key on your other device." : "Shared progress is in sync.");
+      setChangingKey(false);
+      setStatus(data.claimed ? "Saved on this browser. Type this same key on your other device." : "Shared progress is in sync.");
       setStatusKind("is-saved");
     } catch (error) {
       setStatus(error.message === "unauthorized" ? "That sync key was not accepted." : "The shared record did not answer. Checks stay on this device.");
@@ -210,6 +241,7 @@ export default function Desk() {
     }
     setStatus("Saving…");
     setStatusKind("");
+    writing.current = true;
     try {
       const data = await postRecord(body);
       setDone(data.done || []);
@@ -219,6 +251,8 @@ export default function Desk() {
     } catch (error) {
       setStatus("The shared record did not answer. Checks stay on this device.");
       setStatusKind("is-error");
+    } finally {
+      writing.current = false;
     }
   }
 
@@ -260,25 +294,35 @@ export default function Desk() {
       <YearLine view={view} doneSet={doneSet} onPick={(n) => go(n, true)} />
       <SessionIndex view={view} eraIndex={session.era} doneSet={doneSet} onPick={(n) => go(n, true)} />
       <footer>
-        <form id="syncKeyForm" className="sync-key" onSubmit={saveKey}>
-          <label className="menu-label" htmlFor="syncKey">Sync key</label>
-          <div className="sync-key-row">
-            <input
-              id="syncKey"
-              type={reveal ? "text" : "password"}
-              autoComplete="off"
-              maxLength={128}
-              spellCheck={false}
-              aria-describedby="syncLine"
-              value={draftKey}
-              onChange={(event) => setDraftKey(event.target.value)}
-            />
-            <button type="button" id="syncKeyReveal" onClick={() => setReveal((shown) => !shown)}>{reveal ? "Hide" : "Show"}</button>
-            <button type="submit">Save</button>
+        {syncKey && !changingKey ? (
+          <div className="sync-key">
+            <p className="menu-label">Sync key</p>
+            <p className="menu-note">Saved on this browser. Progress keeps syncing, so you do not need to enter it again.</p>
+            <p className={`menu-note sync-key-status${statusKind ? ` ${statusKind}` : ""}`} id="syncLine" role="status">{status}</p>
+            <button type="button" onClick={() => setChangingKey(true)}>Change key</button>
           </div>
-          <p className={`menu-note sync-key-status${statusKind ? ` ${statusKind}` : ""}`} id="syncLine" role="status">{status}</p>
-        </form>
-        <p>Ticks are saved in this browser and, when the connection works, on the shared reading record. Publication text stays on <a href={LIBRARY}>Watchtower Online Library</a>.</p>
+        ) : (
+          <form id="syncKeyForm" className="sync-key" onSubmit={saveKey}>
+            <label className="menu-label" htmlFor="syncKey">Sync key</label>
+            <div className="sync-key-row">
+              <input
+                id="syncKey"
+                type={reveal ? "text" : "password"}
+                autoComplete="off"
+                maxLength={128}
+                spellCheck={false}
+                aria-describedby="syncLine"
+                value={draftKey}
+                onChange={(event) => setDraftKey(event.target.value)}
+              />
+              <button type="button" id="syncKeyReveal" onClick={() => setReveal((shown) => !shown)}>{reveal ? "Hide" : "Show"}</button>
+              <button type="submit">Save</button>
+              {syncKey ? <button type="button" onClick={() => setChangingKey(false)}>Cancel</button> : null}
+            </div>
+            <p className={`menu-note sync-key-status${statusKind ? ` ${statusKind}` : ""}`} id="syncLine" role="status">{status}</p>
+          </form>
+        )}
+        <p>The sync key stays in this browser. Checks keep syncing with the shared reading record. Publication text stays on <a href={LIBRARY}>Watchtower Online Library</a>.</p>
       </footer>
     </div>
   );
