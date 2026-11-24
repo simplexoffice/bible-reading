@@ -49,10 +49,10 @@
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   min-height: 44px;
-  margin-top: 8px;
+  margin-top: 6px;
   cursor: pointer;
 }
 
@@ -98,11 +98,13 @@ button.chip[aria-checked="true"]:hover {
   filter: none;
 }
 
-:root[data-theme="dark"] .chip-col::before { background: #0f1c2a; }
+:root[data-theme="dark"] .chip-col::before { background: #243a52; }
 
 :root[data-theme="dark"] button.chip[aria-checked="true"],
 :root[data-theme="dark"] button.chip[aria-checked="true"]:hover {
-  background: #3a4d62;
+  background: #5d7c99;
+  color: var(--ink);
+  box-shadow: none;
 }
 
 .group {

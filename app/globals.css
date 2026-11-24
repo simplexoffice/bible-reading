@@ -260,6 +260,12 @@ h1 {
   color: var(--paper);
 }
 
+:root[data-theme="dark"] .chapter-read input:checked + .tick {
+  background: #2f6fed;
+  border-color: #2f6fed;
+  color: #f7fbff;
+}
+
 .chapter-read input:checked + .tick svg { opacity: 1; }
 
 .chapter-read input:focus-visible + .tick {
