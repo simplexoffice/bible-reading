@@ -49,15 +49,19 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 180px;
+  max-width: 100%;
 }
 
 body {
   margin: 0;
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--bg);
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 1.05rem;
   line-height: 1.5;
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -77,7 +81,9 @@ body {
 }
 
 .wrap {
+  width: 100%;
   max-width: 40rem;
+  min-width: 0;
   margin: 0 auto;
   padding: 0 0 28px;
   display: flex;
@@ -131,6 +137,7 @@ h1 {
   font-size: 1.7rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
+  overflow-wrap: break-word;
 }
 
 .lede {
@@ -175,6 +182,7 @@ h1 {
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.12;
+  overflow-wrap: anywhere;
 }
 
 .note {
@@ -216,11 +224,13 @@ h1 {
 
 .nav {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: center;
   gap: 6px;
   margin-top: 20px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .chev {
