@@ -329,7 +329,7 @@ button.era-dot.is-current:hover::before { opacity: 1; }
 }
 
 .swatch.is-done { background: var(--fill); }
-.swatch.is-current { background: var(--ink); }
+.swatch.is-current { background: var(--tone-books); }
 
 .year {
   display: grid;
@@ -356,11 +356,11 @@ button.year-mark {
 button.year-mark:hover { background: var(--muted); }
 button.year-mark.is-done { background: var(--fill); }
 button.year-mark.is-done:hover { background: var(--fill); filter: brightness(1.08); }
-button.year-mark.is-current { background: var(--ink); }
-button.year-mark.is-current:hover { background: var(--ink); }
+button.year-mark.is-current { background: var(--tone-books); }
+button.year-mark.is-current:hover { background: var(--tone-books); }
 button.year-mark.is-current.is-done {
   background: var(--done);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--tone-books);
 }
 button.year-mark.is-current.is-done:hover { background: var(--done); }
 
