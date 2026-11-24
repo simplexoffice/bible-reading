@@ -19,6 +19,31 @@ export function ReadingPanel({ session, era, chips, chipIndex, chapterSet, onChi
     if (node && document.activeElement?.classList.contains("chip") && document.activeElement !== node) node.focus();
   }, [selected]);
 
+  useEffect(() => {
+    const root = document.getElementById("chips");
+    if (!root) return undefined;
+    function markLines() {
+      const cols = [...root.querySelectorAll(".chip-col")];
+      const rows = new Map();
+      cols.forEach((col) => {
+        const top = col.offsetTop;
+        const key = [...rows.keys()].find((value) => Math.abs(value - top) < 2);
+        const line = key == null ? top : key;
+        if (!rows.has(line)) rows.set(line, []);
+        rows.get(line).push(col);
+      });
+      cols.forEach((col) => col.classList.remove("is-line-start", "is-line-end"));
+      rows.forEach((line) => {
+        line[0].classList.add("is-line-start");
+        line[line.length - 1].classList.add("is-line-end");
+      });
+    }
+    markLines();
+    const observer = new ResizeObserver(markLines);
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [chips]);
+
   function onChipKey(event, index) {
     const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
     const back = event.key === "ArrowLeft" || event.key === "ArrowUp";
