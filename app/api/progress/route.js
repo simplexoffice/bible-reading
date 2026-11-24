@@ -14,10 +14,15 @@ function tokenFrom(request, body) {
 }
 
 export async function GET(request) {
-  await ensureSeed();
-  const verdict = await gate(tokenFrom(request));
-  if (verdict.error) return json({ ok: false, error: verdict.error });
-  return json({ ok: true, ...(await readState()) });
+  try {
+    await ensureSeed();
+    const verdict = await gate(tokenFrom(request));
+    if (verdict.error) return json({ ok: false, error: verdict.error });
+    return json({ ok: true, ...(await readState()) });
+  } catch (error) {
+    console.error("progress get failed", error?.code || error?.name || "error");
+    return json({ ok: false, error: "unavailable" });
+  }
 }
 
 export async function POST(request) {
@@ -30,11 +35,18 @@ export async function POST(request) {
     return json({ ok: false, error: "bad request" }, 400);
   }
   if (!body || typeof body !== "object" || Array.isArray(body)) return json({ ok: false, error: "bad request" }, 400);
-  await ensureSeed();
-  const verdict = await claim(tokenFrom(request, body));
-  if (verdict.error) return json({ ok: false, error: verdict.error });
-  const saved = await saveProgress(body);
-  const state = await readState();
-  if (saved.error) return json({ ok: false, error: saved.error, claimed: verdict.claimed === true, ...state });
-  return json({ ok: true, claimed: verdict.claimed === true, ...state });
+  try {
+    await ensureSeed();
+    const verdict = await claim(tokenFrom(request, body));
+    if (verdict.error) return json({ ok: false, error: verdict.error });
+    const saved = await saveProgress(body);
+    const state = await readState();
+    if (saved.error && saved.error !== "nothing to save") {
+      return json({ ok: false, error: saved.error, claimed: verdict.claimed === true, ...state });
+    }
+    return json({ ok: true, claimed: verdict.claimed === true, ...state });
+  } catch (error) {
+    console.error("progress post failed", error?.code || error?.name || "error");
+    return json({ ok: false, error: "unavailable" });
+  }
 }

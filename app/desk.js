@@ -45,9 +45,14 @@ async function postRecord(body) {
     headers: { "content-type": "text/plain" },
     body: JSON.stringify(body),
   });
-  const data = await response.json();
-  if (!data || data.ok !== true) throw new Error(data?.error || "unreachable");
-  return data;
+  let data;
+  try {
+    data = await response.json();
+  } catch (error) {
+    throw new Error("unreachable");
+  }
+  if (data?.ok === true || data?.error === "nothing to save") return data;
+  throw new Error(data?.error || "unreachable");
 }
 
 export default function Desk() {
